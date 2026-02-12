@@ -40,6 +40,14 @@ public class Pedido {
         this.total = this.subtotal + this.igic;
     }
 
+    public void avanzarEstado() {
+        if (this.estado == EstadoPedido.EN_PREPARACION) {
+            this.estado = EstadoPedido.LISTO_PARA_ENTREGAR;
+        } else if (this.estado == EstadoPedido.LISTO_PARA_ENTREGAR) {
+            this.estado = EstadoPedido.ENTREGADO;
+        }
+    }
+
     // Getters para JSON
     public int getId() {
         return id;

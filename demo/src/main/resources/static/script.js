@@ -144,19 +144,30 @@ function cargarPedidos() {
                         <span class="id">#${p.id}</span>
                         <span class="mesa">Mesa ${p.mesa}</span>
                     </div>
-                    <div class="cliente">👤 ${p.nombreCliente}</div>
                     <ul class="articulos">
                         ${p.articulos.map(a => `<li>• ${a.nombre} ×${a.cantidad}</li>`).join('')}
                     </ul>
                     <div class="total-line">
-                        <span class="estado ${p.estado}">${p.estado.replace('_', ' ')}</span>
-                        <span class="total">${p.total.toFixed(2)} €</span>
+                        <span class="estado ${p.estado}">${p.estado.replace(/_/g, ' ')}</span>
+                        
+                        ${p.estado !== 'ENTREGADO' ? 
+                            `<button onclick="avanzarEstado(${p.id})" style="padding:5px 10px; font-size:0.8em; background:#eee; border:none; border-radius:5px; cursor:pointer;">
+                                Avanzar ➡
+                            </button>` 
+                            : '<span style="color:green">✔ Completado</span>'}
                     </div>
                 </div>
             `).join('');
         })
         .catch(() => {
             document.getElementById('lista-pedidos').innerHTML = '<p class="empty-msg">Error al cargar pedidos</p>';
+        });
+}
+
+function avanzarEstado(id) {
+    fetch(`${API}/pedido/${id}/avanzar`, { method: 'POST' })
+        .then(res => {
+            if(res.ok) cargarPedidos(); // Recargar la lista si todo fue bien
         });
 }
 

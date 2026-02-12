@@ -49,6 +49,17 @@ public class RestauranteController {
         pedidos.add(nuevoPedido);
         return nuevoPedido;
     }
+    @PostMapping("/pedido/{id}/avanzar")
+    public Pedido avanzarEstadoPedido(@org.springframework.web.bind.annotation.PathVariable int id) {
+        // Buscamos el pedido por ID
+        for (Pedido p : pedidos) {
+            if (p.getId() == id) {
+                p.avanzarEstado();
+                return p;
+            }
+        }
+        return null;
+    }
 
     // Record auxiliar
     public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {
