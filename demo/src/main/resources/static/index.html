@@ -4,41 +4,98 @@
     <meta charset="UTF-8">
     <title>Restaurante Java Spring</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; margin: 0; min-height: 100vh; }
         
-        /* Grid del menú */
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .plato-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fff; transition: transform 0.2s; }
-        .plato-card:hover { transform: translateY(-5px); border-color: #667eea; }
-        .precio { color: #28a745; font-weight: bold; font-size: 1.2em; }
-        button { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-
+        /* Navegación entre vistas */
+        .nav { background: #16213e; padding: 15px; display: flex; justify-content: center; gap: 20px; }
+        .nav button { background: #0f3460; color: #e94560; border: 2px solid #e94560; padding: 12px 30px; border-radius: 25px; font-size: 1em; cursor: pointer; transition: all 0.3s; }
+        .nav button:hover, .nav button.active { background: #e94560; color: white; }
+        
+        .vista { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .vista.activa { display: block; }
+        
+        h1, h2, h3 { color: #eee; margin-bottom: 20px; }
+        
+        /* Menú grid */
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .plato-card { background: #16213e; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #0f3460; transition: transform 0.2s, border-color 0.2s; }
+        .plato-card:hover { transform: translateY(-5px); border-color: #e94560; }
+        .plato-card h4 { color: #fff; margin: 0 0 8px 0; }
+        .plato-card p { color: #aaa; margin: 5px 0; font-size: 0.9em; }
+        .precio { color: #e94560; font-weight: bold; font-size: 1.3em; }
+        .plato-card button { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; margin-top: 10px; }
+        .plato-card button:hover { background: #ff6b6b; }
+        
         /* Carrito */
-        .carrito-section { border-top: 2px solid #eee; padding-top: 20px; }
-        #lista-carrito { list-style: none; padding: 0; }
-        #lista-carrito li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; }
+        .carrito-box { background: #16213e; border-radius: 12px; padding: 25px; margin-top: 30px; }
+        .input-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .input-row input, .input-row select { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #0f3460; background: #1a1a2e; color: #fff; font-size: 1em; }
+        #lista-carrito { list-style: none; padding: 0; margin: 15px 0; }
+        #lista-carrito li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #0f3460; color: #ccc; }
+        .total-box { font-size: 1.3em; color: #e94560; text-align: right; margin: 15px 0; }
+        .btn-pedir { width: 100%; background: linear-gradient(135deg, #e94560, #ff6b6b); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; cursor: pointer; }
+        .btn-pedir:hover { opacity: 0.9; }
         
-        .total-box { font-size: 1.2em; font-weight: bold; text-align: right; margin-top: 10px; }
-        .btn-pedir { width: 100%; background: #28a745; padding: 15px; font-size: 1.1em; margin-top: 10px; }
+        /* Panel trabajador */
+        .pedidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .pedido-card { background: #16213e; border-radius: 12px; padding: 20px; border-left: 4px solid #e94560; }
+        .pedido-card .header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .pedido-card .id { color: #e94560; font-weight: bold; }
+        .pedido-card .mesa { background: #e94560; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; }
+        .pedido-card .cliente { color: #fff; font-size: 1.1em; margin-bottom: 10px; }
+        .pedido-card .articulos { color: #aaa; font-size: 0.9em; border-top: 1px solid #0f3460; padding-top: 10px; }
+        .pedido-card .articulos li { padding: 3px 0; list-style: none; }
+        .pedido-card .total { color: #e94560; font-weight: bold; margin-top: 10px; text-align: right; }
+        .pedido-card .estado { display: inline-block; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; margin-top: 10px; }
+        .estado.EN_PREPARACION { background: #f39c12; color: #fff; }
+        .estado.LISTO { background: #27ae60; color: #fff; }
+        
+        .btn-refresh { background: #0f3460; color: #e94560; border: 2px solid #e94560; padding: 10px 25px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
+        .btn-refresh:hover { background: #e94560; color: white; }
+        
+        .empty-msg { color: #666; text-align: center; padding: 40px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🍽️ Restaurante Spring</h1>
-        
-        <h3>Menú Disponible</h3>
-        <div id="menu" class="menu-grid">
-            </div>
+    <!-- Navegación -->
+    <nav class="nav">
+        <button onclick="cambiarVista('cliente')" class="active" id="btn-cliente">🍽️ Cliente</button>
+        <button onclick="cambiarVista('trabajador')" id="btn-trabajador">👨‍🍳 Panel Trabajador</button>
+    </nav>
 
-        <div class="carrito-section">
+    <!-- Vista Cliente -->
+    <div id="vista-cliente" class="vista activa">
+        <h1>🍽️ Restaurante Spring</h1>
+        <h3>Menú Disponible</h3>
+        <div id="menu" class="menu-grid"></div>
+
+        <div class="carrito-box">
             <h3>🛒 Tu Pedido</h3>
-            <input type="text" id="cliente" placeholder="Tu nombre..." style="width: 100%; padding: 10px; margin-bottom: 10px;">
+            <div class="input-row">
+                <input type="text" id="cliente" placeholder="Tu nombre...">
+                <select id="mesa">
+                    <option value="">Selecciona mesa</option>
+                    <option value="1">Mesa 1</option>
+                    <option value="2">Mesa 2</option>
+                    <option value="3">Mesa 3</option>
+                    <option value="4">Mesa 4</option>
+                    <option value="5">Mesa 5</option>
+                    <option value="6">Mesa 6</option>
+                </select>
+            </div>
             <ul id="lista-carrito"></ul>
             <div class="total-box">Total estimado: <span id="total">0.00</span>€</div>
-            <button onclick="enviarPedido()" class="btn-pedir">Confirmar Pedido</button>
+            <button onclick="enviarPedido()" class="btn-pedir">✓ Confirmar Pedido</button>
+        </div>
+    </div>
+
+    <!-- Vista Trabajador -->
+    <div id="vista-trabajador" class="vista">
+        <h1>👨‍🍳 Panel de Pedidos</h1>
+        <button onclick="cargarPedidos()" class="btn-refresh">🔄 Actualizar Pedidos</button>
+        <div id="lista-pedidos" class="pedidos-grid">
+            <p class="empty-msg">Cargando pedidos...</p>
         </div>
     </div>
 
