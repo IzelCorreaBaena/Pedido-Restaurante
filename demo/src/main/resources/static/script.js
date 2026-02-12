@@ -328,12 +328,14 @@ function cambiarEstadoPedido(id, nuevoEstado) {
 }
 
 function eliminarPedido(id) {
-    if (!confirm('¿Eliminar este pedido?')) return;
-    fetch(`${API}/pedido/${id}`, { method: 'DELETE' })
-        .then(() => {
-            cargarPedidos();
-            mostrarToast('Pedido eliminado');
-        });
+    mostrarConfirm('¿Eliminar este pedido?', 'Esta acción no se puede deshacer.', 'Eliminar').then(ok => {
+        if (!ok) return;
+        fetch(`${API}/pedido/${id}`, { method: 'DELETE' })
+            .then(() => {
+                cargarPedidos();
+                mostrarToast('Pedido eliminado');
+            });
+    });
 }
 
 // ========== NOTIFICACIONES DE PAGO (TRABAJADOR) ==========
@@ -439,38 +441,30 @@ function agregarArticuloAdmin() {
 }
 
 function editarArticuloAdmin(index, nombre, desc, precio) {
-    const nuevoNombre = prompt('Nombre:', nombre);
-    if (nuevoNombre === null) return;
-    const nuevaDesc = prompt('Descripción:', desc);
-    if (nuevaDesc === null) return;
-    const nuevoPrecio = prompt('Precio (€):', precio);
-    if (nuevoPrecio === null) return;
-
-    const precioNum = parseFloat(nuevoPrecio);
-    if (!nuevoNombre || isNaN(precioNum) || precioNum <= 0) {
-        mostrarToast('Datos inválidos');
-        return;
-    }
-
-    fetch(`${API}/admin/articulo/${index}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nuevoNombre, cantidad: 1, descripcion: nuevaDesc || 'Sin descripción', precio: precioNum })
-    })
-    .then(res => res.json())
-    .then(() => {
-        cargarAdminMenu();
-        mostrarToast('Artículo actualizado');
+    mostrarModalEditarArticulo(nombre, desc, precio).then(datos => {
+        if (!datos) return;
+        fetch(`${API}/admin/articulo/${index}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre: datos.nombre, cantidad: 1, descripcion: datos.descripcion || 'Sin descripción', precio: datos.precio })
+        })
+        .then(res => res.json())
+        .then(() => {
+            cargarAdminMenu();
+            mostrarToast('Artículo actualizado');
+        });
     });
 }
 
 function eliminarArticuloAdmin(index) {
-    if (!confirm('¿Eliminar este artículo del menú?')) return;
-    fetch(`${API}/admin/articulo/${index}`, { method: 'DELETE' })
-        .then(() => {
-            cargarAdminMenu();
-            mostrarToast('Artículo eliminado');
-        });
+    mostrarConfirm('¿Eliminar este artículo?', 'Se eliminará del menú permanentemente.', 'Eliminar').then(ok => {
+        if (!ok) return;
+        fetch(`${API}/admin/articulo/${index}`, { method: 'DELETE' })
+            .then(() => {
+                cargarAdminMenu();
+                mostrarToast('Artículo eliminado');
+            });
+    });
 }
 
 function cargarAdminPedidos() {
@@ -509,33 +503,29 @@ function cargarAdminPedidos() {
 }
 
 function adminCambiarEstado(id) {
-    const estado = prompt('Nuevo estado:\n1) EN_PREPARACION\n2) LISTO_PARA_ENTREGAR\n3) ENTREGADO\n4) CUENTA_PEDIDA\n5) PAGADO');
-    const estados = { '1': 'EN_PREPARACION', '2': 'LISTO_PARA_ENTREGAR', '3': 'ENTREGADO', '4': 'CUENTA_PEDIDA', '5': 'PAGADO' };
-    const nuevoEstado = estados[estado] || estado;
-
-    if (!nuevoEstado || !Object.values(estados).includes(nuevoEstado)) {
-        mostrarToast('Estado no válido');
-        return;
-    }
-
-    fetch(`${API}/pedido/${id}/estado`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevoEstado })
-    })
-    .then(() => {
-        cargarAdminPedidos();
-        mostrarToast('Estado actualizado');
+    mostrarModalEstado().then(nuevoEstado => {
+        if (!nuevoEstado) return;
+        fetch(`${API}/pedido/${id}/estado`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: nuevoEstado })
+        })
+        .then(() => {
+            cargarAdminPedidos();
+            mostrarToast('Estado actualizado');
+        });
     });
 }
 
 function adminEliminarPedido(id) {
-    if (!confirm('¿Eliminar este pedido?')) return;
-    fetch(`${API}/pedido/${id}`, { method: 'DELETE' })
-        .then(() => {
-            cargarAdminPedidos();
-            mostrarToast('Pedido eliminado');
-        });
+    mostrarConfirm('¿Eliminar este pedido?', 'Esta acción no se puede deshacer.', 'Eliminar').then(ok => {
+        if (!ok) return;
+        fetch(`${API}/pedido/${id}`, { method: 'DELETE' })
+            .then(() => {
+                cargarAdminPedidos();
+                mostrarToast('Pedido eliminado');
+            });
+    });
 }
 
 function cargarAdminMesas() {
@@ -562,6 +552,95 @@ function guardarMesas() {
     .then(res => res.json())
     .then(() => {
         mostrarToast(`Mesas actualizadas a ${numMesas}`);
+    });
+}
+
+// ========== MODALES PERSONALIZADOS ==========
+
+// Modal de confirmación (reemplaza confirm())
+function mostrarConfirm(titulo, mensaje, textoBoton) {
+    return new Promise(resolve => {
+        const overlay = document.getElementById('modal-confirm');
+        document.getElementById('confirm-titulo').textContent = titulo || '¿Estás seguro?';
+        document.getElementById('confirm-mensaje').textContent = mensaje || '';
+        document.getElementById('confirm-aceptar').textContent = textoBoton || 'Aceptar';
+        overlay.classList.add('activo');
+
+        const limpiar = () => {
+            overlay.classList.remove('activo');
+            document.getElementById('confirm-aceptar').replaceWith(document.getElementById('confirm-aceptar').cloneNode(true));
+            document.getElementById('confirm-cancelar').replaceWith(document.getElementById('confirm-cancelar').cloneNode(true));
+        };
+
+        document.getElementById('confirm-aceptar').addEventListener('click', () => { limpiar(); resolve(true); });
+        document.getElementById('confirm-cancelar').addEventListener('click', () => { limpiar(); resolve(false); });
+    });
+}
+
+// Modal de editar artículo (reemplaza 3 prompts seguidos)
+function mostrarModalEditarArticulo(nombre, desc, precio) {
+    return new Promise(resolve => {
+        const overlay = document.getElementById('modal-editar-articulo');
+        document.getElementById('edit-art-nombre').value = nombre || '';
+        document.getElementById('edit-art-desc').value = desc || '';
+        document.getElementById('edit-art-precio').value = precio || '';
+        overlay.classList.add('activo');
+
+        const limpiar = () => {
+            overlay.classList.remove('activo');
+            document.getElementById('edit-art-guardar').replaceWith(document.getElementById('edit-art-guardar').cloneNode(true));
+            document.getElementById('edit-art-cancelar').replaceWith(document.getElementById('edit-art-cancelar').cloneNode(true));
+        };
+
+        document.getElementById('edit-art-guardar').addEventListener('click', () => {
+            const n = document.getElementById('edit-art-nombre').value.trim();
+            const d = document.getElementById('edit-art-desc').value.trim();
+            const p = parseFloat(document.getElementById('edit-art-precio').value);
+            if (!n || isNaN(p) || p <= 0) {
+                mostrarToast('Completa nombre y precio correctamente');
+                return;
+            }
+            limpiar();
+            resolve({ nombre: n, descripcion: d, precio: p });
+        });
+        document.getElementById('edit-art-cancelar').addEventListener('click', () => { limpiar(); resolve(null); });
+    });
+}
+
+// Modal de selección de estado (reemplaza prompt de números)
+function mostrarModalEstado() {
+    return new Promise(resolve => {
+        const overlay = document.getElementById('modal-estado');
+        const grid = document.getElementById('estado-opciones');
+        const estados = [
+            { valor: 'EN_PREPARACION', texto: 'En preparación', color: '#f39c12' },
+            { valor: 'LISTO_PARA_ENTREGAR', texto: 'Listo para entregar', color: '#3498db' },
+            { valor: 'ENTREGADO', texto: 'Entregado', color: '#27ae60' },
+            { valor: 'CUENTA_PEDIDA', texto: 'Cuenta pedida', color: '#e74c3c' },
+            { valor: 'PAGADO', texto: 'Pagado', color: '#17a2b8' }
+        ];
+
+        grid.innerHTML = estados.map(e => `
+            <button data-estado="${e.valor}">
+                <span class="estado-dot" style="background:${e.color}"></span>
+                ${e.texto}
+            </button>
+        `).join('');
+
+        overlay.classList.add('activo');
+
+        const limpiar = () => {
+            overlay.classList.remove('activo');
+            document.getElementById('estado-cancelar').replaceWith(document.getElementById('estado-cancelar').cloneNode(true));
+        };
+
+        grid.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                limpiar();
+                resolve(btn.dataset.estado);
+            });
+        });
+        document.getElementById('estado-cancelar').addEventListener('click', () => { limpiar(); resolve(null); });
     });
 }
 

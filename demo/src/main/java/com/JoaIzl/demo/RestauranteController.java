@@ -22,7 +22,7 @@ public class RestauranteController {
 
     // Simulamos una base de datos en memoria
     private List<Pedido> pedidos = new ArrayList<>();
-    
+
     // Lista mutable para poder añadir/borrar platos
     private List<Articulo> menuArticulos = new ArrayList<>(List.of(
             new Articulo("Hamburguesa Deluxe", 1, "Con queso y bacon", 5.50),
@@ -30,12 +30,11 @@ public class RestauranteController {
             new Articulo("Refresco", 1, "Coca-Cola 500ml", 1.50),
             new Articulo("Pizza Margarita", 1, "Tomate y mozzarella", 8.00)
     ));
-    
+
     private int numMesas = 6;
     private List<Map<String, Object>> notificaciones = new CopyOnWriteArrayList<>();
 
     // ========== MENÚ ==========
-    
     @GetMapping("/menu")
     public List<Articulo> obtenerMenu() {
         return menuArticulos;
@@ -47,7 +46,6 @@ public class RestauranteController {
     }
 
     // ========== PEDIDOS ==========
-    
     @GetMapping("/pedidos")
     public List<Pedido> obtenerPedidos() {
         return pedidos;
@@ -55,12 +53,27 @@ public class RestauranteController {
 
     @PostMapping("/pedido")
     public Pedido crearPedido(@RequestBody DatosPedido datos) {
-        Pedido nuevoPedido = new Pedido(datos.nombreCliente, datos.mesa);
+        // Buscar si ya existe un pedido activo para la misma mesa y cliente
+        for (Pedido p : pedidos) {
+            boolean mismaMesa = p.getMesa() == datos.mesa;
+            boolean mismoCliente = p.getNombreCliente().equalsIgnoreCase(datos.nombreCliente);
+            boolean activo = p.getEstado() == EstadoPedido.EN_PREPARACION
+                    || p.getEstado() == EstadoPedido.LISTO_PARA_ENTREGAR;
 
+            if (mismaMesa && mismoCliente && activo) {
+                // Añadir artículos al pedido existente
+                for (Articulo art : datos.articulos) {
+                    p.agregarArticulo(art);
+                }
+                return p;
+            }
+        }
+
+        // Si no existe, crear uno nuevo
+        Pedido nuevoPedido = new Pedido(datos.nombreCliente, datos.mesa);
         for (Articulo art : datos.articulos) {
             nuevoPedido.agregarArticulo(art);
         }
-
         pedidos.add(nuevoPedido);
         return nuevoPedido;
     }
@@ -126,7 +139,6 @@ public class RestauranteController {
     }
 
     // ========== NOTIFICACIONES ==========
-    
     @GetMapping("/notificaciones")
     public List<Map<String, Object>> obtenerNotificaciones() {
         return notificaciones;
@@ -142,7 +154,6 @@ public class RestauranteController {
     }
 
     // ========== ADMIN ==========
-    
     @PostMapping("/admin/articulo")
     public Articulo agregarArticulo(@RequestBody Articulo articulo) {
         menuArticulos.add(articulo);
@@ -174,5 +185,7 @@ public class RestauranteController {
     }
 
     // Record auxiliar
-    public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {}
+    public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {
+
+    }
 }

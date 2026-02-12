@@ -194,6 +194,30 @@
         .mesas-config { display: flex; align-items: center; gap: 14px; }
         .mesas-config input { width: 80px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 1.1em; font-weight: 600; text-align: center; font-family: inherit; }
         .mesas-config button { padding: 10px 20px; border-radius: 8px; background: var(--primary); color: #fff; border: none; cursor: pointer; font-family: inherit; font-weight: 500; }
+
+        /* Modal genérico confirm/prompt */
+        .modal-generic { background: var(--surface); border-radius: var(--radius); padding: 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: fadeIn 0.25s ease; }
+        .modal-generic .modal-icon { font-size: 2.5em; margin-bottom: 14px; }
+        .modal-generic h3 { font-size: 1.15em; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+        .modal-generic p { color: var(--text-light); font-size: 0.92em; margin-bottom: 20px; line-height: 1.5; }
+        .modal-generic .modal-btns { display: flex; gap: 10px; justify-content: center; }
+        .modal-generic .modal-btns button { padding: 10px 24px; border-radius: 10px; font-size: 0.9em; font-weight: 500; cursor: pointer; font-family: inherit; border: none; transition: all 0.2s; }
+        .modal-generic .btn-confirm { background: var(--primary); color: #fff; }
+        .modal-generic .btn-confirm:hover { background: var(--primary-dark); }
+        .modal-generic .btn-confirm-danger { background: var(--danger); color: #fff; }
+        .modal-generic .btn-confirm-danger:hover { background: #c0392b; }
+        .modal-generic .btn-cancel { background: var(--bg); color: var(--text-light); border: 1px solid var(--border) !important; }
+        .modal-generic .btn-cancel:hover { background: var(--border); color: var(--text); }
+        .modal-generic .modal-input { width: 100%; padding: 11px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.92em; font-family: inherit; outline: none; margin-bottom: 16px; transition: border 0.2s; }
+        .modal-generic .modal-input:focus { border-color: var(--primary); }
+        .modal-generic .modal-form-row { display: flex; flex-direction: column; gap: 4px; text-align: left; margin-bottom: 12px; }
+        .modal-generic .modal-form-row label { font-size: 0.8em; color: var(--text-light); font-weight: 500; }
+        .modal-generic .modal-form-row input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.9em; font-family: inherit; outline: none; }
+        .modal-generic .modal-form-row input:focus { border-color: var(--primary); }
+        .modal-estado-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+        .modal-estado-grid button { padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-family: inherit; font-size: 0.9em; font-weight: 500; text-align: left; transition: all 0.2s; color: var(--text); display: flex; align-items: center; gap: 10px; }
+        .modal-estado-grid button:hover { border-color: var(--primary); background: rgba(107,158,221,0.06); }
+        .modal-estado-grid button .estado-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     </style>
 </head>
 <body>
@@ -378,6 +402,57 @@
                 </button>
             </div>
             <button class="btn-cancelar" onclick="cerrarModalPago()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar -->
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal-generic">
+            <div class="modal-icon" id="confirm-icon">⚠️</div>
+            <h3 id="confirm-titulo">¿Estás seguro?</h3>
+            <p id="confirm-mensaje">Esta acción no se puede deshacer.</p>
+            <div class="modal-btns">
+                <button class="btn-cancel" id="confirm-cancelar">Cancelar</button>
+                <button class="btn-confirm-danger" id="confirm-aceptar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Artículo -->
+    <div class="modal-overlay" id="modal-editar-articulo">
+        <div class="modal-generic">
+            <div class="modal-icon">✏️</div>
+            <h3>Editar artículo</h3>
+            <p>Modifica los datos del artículo</p>
+            <div class="modal-form-row">
+                <label>Nombre</label>
+                <input type="text" id="edit-art-nombre">
+            </div>
+            <div class="modal-form-row">
+                <label>Descripción</label>
+                <input type="text" id="edit-art-desc">
+            </div>
+            <div class="modal-form-row">
+                <label>Precio (€)</label>
+                <input type="number" id="edit-art-precio" step="0.10" min="0.10">
+            </div>
+            <div class="modal-btns" style="margin-top:18px;">
+                <button class="btn-cancel" id="edit-art-cancelar">Cancelar</button>
+                <button class="btn-confirm" id="edit-art-guardar">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Estado -->
+    <div class="modal-overlay" id="modal-estado">
+        <div class="modal-generic">
+            <div class="modal-icon">🔄</div>
+            <h3>Cambiar estado</h3>
+            <p>Selecciona el nuevo estado del pedido</p>
+            <div class="modal-estado-grid" id="estado-opciones"></div>
+            <div class="modal-btns">
+                <button class="btn-cancel" id="estado-cancelar">Cancelar</button>
+            </div>
         </div>
     </div>
 
