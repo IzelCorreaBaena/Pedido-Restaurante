@@ -5,9 +5,9 @@ import java.util.List;
 
 public class Pedido {
 
-    private static int contadorPedidos = 0;
+    //private static int contadorPedidos = 0;
 
-    private final int id;
+    private int id; // Quitamos 'final' para que Jackson pueda escribirlo
     private String nombreCliente;
     private int mesa;
     private List<Articulo> articulos;
@@ -16,7 +16,11 @@ public class Pedido {
     private double subtotal;
     private double igic;
     private double total;
-    private String metodoPago; // "efectivo" o "tarjeta"
+    private String metodoPago; 
+
+    // 1. CONSTRUCTOR VACÍO (OBLIGATORIO PARA JSON)
+    public Pedido() {
+    }
 
     public Pedido(String nombreCliente, int mesa) {
         this.id = (int) (Math.random() * 100000);
@@ -24,7 +28,7 @@ public class Pedido {
         this.mesa = mesa;
         this.articulos = new ArrayList<>();
         this.estado = EstadoPedido.EN_PREPARACION;
-        contadorPedidos++;
+        //contadorPedidos++;
     }
 
     public void agregarArticulo(Articulo articulo) {
@@ -37,7 +41,7 @@ public class Pedido {
         for (Articulo art : articulos) {
             this.subtotal += art.precio() * art.cantidad();
         }
-        this.igic = this.subtotal * 0.07; // Tu IGIC del 7%
+        this.igic = this.subtotal * 0.07; 
         this.total = this.subtotal + this.igic;
     }
 
@@ -49,61 +53,25 @@ public class Pedido {
         }
     }
 
-    // Getters para JSON
-    public int getId() {
-        return id;
-    }
+    // Getters y Setters
+    public int getId() { return id; }
+    public String getNombreCliente() { return nombreCliente; }
+    public int getMesa() { return mesa; }
+    public List<Articulo> getArticulos() { return articulos; }
+    public EstadoPedido getEstado() { return estado; }
+    public double getSubtotal() { return subtotal; }
+    public double getIgic() { return igic; }
+    public double getTotal() { return total; }
+    public String getMetodoPago() { return metodoPago; }
 
-    public String getNombreCliente() {
-        return nombreCliente;
-    }
-
-    public int getMesa() {
-        return mesa;
-    }
-
-    public List<Articulo> getArticulos() {
-        return articulos;
-    }
-
-    public EstadoPedido getEstado() {
-        return estado;
-    }
-
-    public double getSubtotal() {
-        return subtotal;
-    }
-
-    public double getIgic() {
-        return igic;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
-    public String getMetodoPago() {
-        return metodoPago;
-    }
-
-    public void setEstado(EstadoPedido estado) {
-        this.estado = estado;
-    }
-
-    public void setMetodoPago(String metodoPago) {
-        this.metodoPago = metodoPago;
-    }
-
-    public void setMesa(int mesa) {
-        this.mesa = mesa;
-    }
-
-    public void setNombreCliente(String nombreCliente) {
-        this.nombreCliente = nombreCliente;
-    }
-
-    public void setArticulos(List<Articulo> articulos) {
-        this.articulos = articulos;
+    public void setEstado(EstadoPedido estado) { this.estado = estado; }
+    public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
+    public void setMesa(int mesa) { this.mesa = mesa; }
+    public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+    public void setArticulos(List<Articulo> articulos) { 
+        this.articulos = articulos; 
         recalcularTotales();
     }
+    // Setter de ID necesario para cargar desde JSON
+    public void setId(int id) { this.id = id; }
 }

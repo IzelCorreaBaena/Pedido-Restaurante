@@ -4,26 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.io.File;
+import java.io.IOException;
+import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
-public class RestauranteController {
+public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS NADA!
 
-    // Simulamos una base de datos en memoria
     private List<Pedido> pedidos = new ArrayList<>();
-
-    // Lista mutable para poder añadir/borrar platos
+    
+    // Lista del menú 
     private List<Articulo> menuArticulos = new ArrayList<>(List.of(
             new Articulo("Hamburguesa Deluxe", 1, "Con queso y bacon", 5.50),
             new Articulo("Papas Fritas", 1, "Ración grande", 2.50),
@@ -33,6 +29,15 @@ public class RestauranteController {
 
     private int numMesas = 6;
     private List<Map<String, Object>> notificaciones = new CopyOnWriteArrayList<>();
+
+    // Configuración de persistencia
+    private final String RUTA_ARCHIVO = "pedidos.json";
+    private ObjectMapper mapper = new ObjectMapper();
+
+    // Constructor
+    public RestauranteController() {
+        cargarDatos(); 
+    }
 
     // ========== MENÚ ==========
     @GetMapping("/menu")
@@ -53,28 +58,27 @@ public class RestauranteController {
 
     @PostMapping("/pedido")
     public Pedido crearPedido(@RequestBody DatosPedido datos) {
-        // Buscar si ya existe un pedido activo para la misma mesa y cliente
         for (Pedido p : pedidos) {
             boolean mismaMesa = p.getMesa() == datos.mesa;
             boolean mismoCliente = p.getNombreCliente().equalsIgnoreCase(datos.nombreCliente);
-            boolean activo = p.getEstado() == EstadoPedido.EN_PREPARACION
-                    || p.getEstado() == EstadoPedido.LISTO_PARA_ENTREGAR;
+            boolean activo = p.getEstado() == EstadoPedido.EN_PREPARACION || p.getEstado() == EstadoPedido.LISTO_PARA_ENTREGAR;
 
             if (mismaMesa && mismoCliente && activo) {
-                // Añadir artículos al pedido existente
                 for (Articulo art : datos.articulos) {
                     p.agregarArticulo(art);
                 }
+                guardarDatos();
                 return p;
             }
         }
 
-        // Si no existe, crear uno nuevo
         Pedido nuevoPedido = new Pedido(datos.nombreCliente, datos.mesa);
         for (Articulo art : datos.articulos) {
             nuevoPedido.agregarArticulo(art);
         }
         pedidos.add(nuevoPedido);
+        
+        guardarDatos();
         return nuevoPedido;
     }
 
@@ -83,20 +87,20 @@ public class RestauranteController {
         for (Pedido p : pedidos) {
             if (p.getId() == id) {
                 p.avanzarEstado();
+                guardarDatos();
                 return p;
             }
         }
         return null;
     }
 
-    // PUT /api/pedido/{id}/estado - Cambiar estado manualmente
     @PutMapping("/pedido/{id}/estado")
     public Pedido cambiarEstado(@PathVariable int id, @RequestBody Map<String, String> body) {
         for (Pedido p : pedidos) {
             if (p.getId() == id) {
-                // Asegúrate de que tu Enum tenga este valor o controla la excepción
                 try {
                     p.setEstado(EstadoPedido.valueOf(body.get("estado")));
+                    guardarDatos();
                     return p;
                 } catch (Exception e) {
                     return null;
@@ -106,16 +110,16 @@ public class RestauranteController {
         return null;
     }
 
-    // POST /api/pedido/{id}/pagar - Cliente pide la cuenta
     @PostMapping("/pedido/{id}/pagar")
     public Map<String, Object> pedirCuenta(@PathVariable int id, @RequestBody Map<String, String> body) {
         String metodoPago = body.get("metodoPago");
         for (Pedido p : pedidos) {
             if (p.getId() == id) {
-                p.setEstado(EstadoPedido.CUENTA_PEDIDA); // Asegúrate de añadir CUENTA_PEDIDA en tu Enum
-                p.setMetodoPago(metodoPago); // Asegúrate de añadir este método en Pedido.java
+                p.setEstado(EstadoPedido.CUENTA_PEDIDA);
+                p.setMetodoPago(metodoPago);
+                
+                guardarDatos(); 
 
-                // Crear notificación para el trabajador
                 Map<String, Object> notif = Map.of(
                         "pedidoId", p.getId(),
                         "mesa", p.getMesa(),
@@ -135,6 +139,7 @@ public class RestauranteController {
     @DeleteMapping("/pedido/{id}")
     public Map<String, Object> eliminarPedido(@PathVariable int id) {
         boolean removed = pedidos.removeIf(p -> p.getId() == id);
+        if(removed) guardarDatos();
         return Map.of("ok", removed);
     }
 
@@ -153,7 +158,7 @@ public class RestauranteController {
         return Map.of("ok", false);
     }
 
-    // ========== ADMIN ==========
+    // ========== ADMIN (Menú) ==========
     @PostMapping("/admin/articulo")
     public Articulo agregarArticulo(@RequestBody Articulo articulo) {
         menuArticulos.add(articulo);
@@ -184,8 +189,30 @@ public class RestauranteController {
         return Map.of("ok", true, "numMesas", numMesas);
     }
 
-    // Record auxiliar
-    public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {
-
+    // ========== MÉTODOS DE PERSISTENCIA (JSON) ==========
+    
+    private void guardarDatos() {
+        try {
+            // writeValue viene de Jackson (com.fasterxml...)
+            mapper.writeValue(new File(RUTA_ARCHIVO), pedidos);
+            System.out.println("💾 Datos guardados en " + RUTA_ARCHIVO);
+        } catch (IOException e) {
+            System.err.println("❌ Error al guardar: " + e.getMessage());
+        }
     }
+
+    private void cargarDatos() {
+        try {
+            File archivo = new File(RUTA_ARCHIVO);
+            if (archivo.exists()) {
+                // AQUÍ USAMOS TypeReference de forma anónima
+                pedidos = mapper.readValue(archivo, new TypeReference<List<Pedido>>(){});
+                System.out.println("📂 Pedidos cargados: " + pedidos.size());
+            }
+        } catch (IOException e) {
+            System.err.println("❌ Error al cargar: " + e.getMessage());
+        }
+    }
+
+    public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {}
 }
