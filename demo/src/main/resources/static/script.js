@@ -1,6 +1,9 @@
 let carrito = [];
 const API = 'http://localhost:8080/api';
 
+// Emojis para cada plato
+const EMOJIS = { 'Hamburguesa Deluxe': '🍔', 'Papas Fritas': '🍟', 'Refresco': '🥤', 'Pizza Margarita': '🍕' };
+
 // Cargar menú al iniciar
 document.addEventListener('DOMContentLoaded', () => {
     fetch(`${API}/menu`)
@@ -8,12 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(platos => {
             const contenedor = document.getElementById('menu');
             platos.forEach(plato => {
+                const emoji = EMOJIS[plato.nombre] || '🍽️';
                 contenedor.innerHTML += `
                     <div class="plato-card">
+                        <span class="emoji">${emoji}</span>
                         <h4>${plato.nombre}</h4>
-                        <p>${plato.descripcion}</p>
-                        <p class="precio">${plato.precio}€</p>
-                        <button onclick="agregar('${plato.nombre}', ${plato.precio})">Añadir</button>
+                        <p class="desc">${plato.descripcion}</p>
+                        <div class="card-footer">
+                            <span class="precio">${plato.precio.toFixed(2)} €</span>
+                            <button onclick="agregar('${plato.nombre}', ${plato.precio})">Añadir</button>
+                        </div>
                     </div>
                 `;
             });
@@ -24,11 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function cambiarVista(vista) {
     document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    
+
     document.getElementById(`vista-${vista}`).classList.add('activa');
     document.getElementById(`btn-${vista}`).classList.add('active');
-    
-    // Cargar pedidos al entrar al panel trabajador
+
     if (vista === 'trabajador') cargarPedidos();
 }
 
@@ -36,28 +42,43 @@ function cambiarVista(vista) {
 function agregar(nombre, precio) {
     carrito.push({ nombre, precio, cantidad: 1, descripcion: "Pedido web" });
     actualizarCarrito();
+    mostrarToast(`${nombre} añadido`);
 }
 
 function actualizarCarrito() {
     const lista = document.getElementById('lista-carrito');
     lista.innerHTML = '';
     let total = 0;
-    
-    carrito.forEach(item => {
-        total += item.precio;
-        lista.innerHTML += `<li>${item.nombre} <span>${item.precio}€</span></li>`;
-    });
-    
+
+    if (carrito.length === 0) {
+        lista.innerHTML = '<li class="carrito-empty">Añade platos desde la carta</li>';
+    } else {
+        carrito.forEach((item, i) => {
+            total += item.precio;
+            lista.innerHTML += `
+                <li>
+                    <span>${item.nombre}</span>
+                    <span>${item.precio.toFixed(2)} € <a href="#" onclick="quitar(${i}); return false;" style="color:var(--text-light);text-decoration:none;margin-left:8px;">✕</a></span>
+                </li>`;
+        });
+    }
+
     document.getElementById('total').textContent = total.toFixed(2);
+}
+
+// Quitar artículo del carrito
+function quitar(index) {
+    carrito.splice(index, 1);
+    actualizarCarrito();
 }
 
 // Enviar pedido al servidor
 function enviarPedido() {
-    const nombre = document.getElementById('cliente').value;
+    const nombre = document.getElementById('cliente').value.trim();
     const mesa = document.getElementById('mesa').value;
-    
+
     if (!nombre || !mesa || carrito.length === 0) {
-        alert("Completa nombre, mesa y añade algún plato.");
+        mostrarToast('Completa nombre, mesa y añade algún plato');
         return;
     }
 
@@ -68,13 +89,35 @@ function enviarPedido() {
     })
     .then(res => res.json())
     .then(pedido => {
-        alert(`✅ Pedido #${pedido.id}\nMesa: ${pedido.mesa}\nTotal: ${pedido.total.toFixed(2)}€`);
         carrito = [];
-        actualizarCarrito();
         document.getElementById('cliente').value = '';
         document.getElementById('mesa').value = '';
+
+        // Mostrar confirmación dentro del contenedor del carrito
+        const lista = document.getElementById('lista-carrito');
+        lista.innerHTML = `
+            <li class="confirmacion-pedido" style="flex-direction:column;align-items:center;text-align:center;padding:28px 10px;border:none;">
+                <span style="font-size:2.2em;margin-bottom:10px;">✓</span>
+                <strong style="font-size:1.05em;color:var(--text);">Pedido confirmado</strong>
+                <span style="color:var(--text-light);font-size:0.88em;margin-top:6px;">
+                    #${pedido.id} · Mesa ${pedido.mesa} · ${pedido.total.toFixed(2)} €
+                </span>
+                <span style="color:var(--text-light);font-size:0.82em;margin-top:4px;">
+                    Tu pedido se está preparando
+                </span>
+                <a href="#" onclick="resetCarrito(); return false;"
+                   style="margin-top:14px;color:var(--primary-dark);font-size:0.88em;text-decoration:none;font-weight:500;">
+                    Hacer otro pedido
+                </a>
+            </li>`;
+        document.getElementById('total').textContent = '0.00';
     })
-    .catch(() => alert("Error conectando con el servidor"));
+    .catch(() => mostrarToast('Error conectando con el servidor'));
+}
+
+// Restaurar carrito tras confirmación
+function resetCarrito() {
+    actualizarCarrito();
 }
 
 // Cargar pedidos para el panel del trabajador
@@ -83,12 +126,18 @@ function cargarPedidos() {
         .then(res => res.json())
         .then(pedidos => {
             const contenedor = document.getElementById('lista-pedidos');
-            
+
+            // Actualizar estadísticas
+            document.getElementById('stat-total').textContent = pedidos.length;
+            document.getElementById('stat-prep').textContent = pedidos.filter(p => p.estado === 'EN_PREPARACION').length;
+            const mesasActivas = new Set(pedidos.map(p => p.mesa));
+            document.getElementById('stat-mesas').textContent = mesasActivas.size;
+
             if (pedidos.length === 0) {
-                contenedor.innerHTML = '<p class="empty-msg">No hay pedidos aún</p>';
+                contenedor.innerHTML = '<p class="empty-msg">No hay pedidos aún. Los pedidos aparecerán aquí en tiempo real.</p>';
                 return;
             }
-            
+
             contenedor.innerHTML = pedidos.map(p => `
                 <div class="pedido-card">
                     <div class="header">
@@ -97,14 +146,28 @@ function cargarPedidos() {
                     </div>
                     <div class="cliente">👤 ${p.nombreCliente}</div>
                     <ul class="articulos">
-                        ${p.articulos.map(a => `<li>• ${a.nombre} x${a.cantidad}</li>`).join('')}
+                        ${p.articulos.map(a => `<li>• ${a.nombre} ×${a.cantidad}</li>`).join('')}
                     </ul>
-                    <div class="total">Total: ${p.total.toFixed(2)}€</div>
-                    <span class="estado ${p.estado}">${p.estado.replace('_', ' ')}</span>
+                    <div class="total-line">
+                        <span class="estado ${p.estado}">${p.estado.replace('_', ' ')}</span>
+                        <span class="total">${p.total.toFixed(2)} €</span>
+                    </div>
                 </div>
             `).join('');
         })
         .catch(() => {
             document.getElementById('lista-pedidos').innerHTML = '<p class="empty-msg">Error al cargar pedidos</p>';
         });
+}
+
+// Notificación toast
+function mostrarToast(msg) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }

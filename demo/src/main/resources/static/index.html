@@ -2,80 +2,159 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Restaurante Java Spring</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Brisa — Restaurante</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; margin: 0; min-height: 100vh; }
-        
-        /* Navegación entre vistas */
-        .nav { background: #16213e; padding: 15px; display: flex; justify-content: center; gap: 20px; }
-        .nav button { background: #0f3460; color: #e94560; border: 2px solid #e94560; padding: 12px 30px; border-radius: 25px; font-size: 1em; cursor: pointer; transition: all 0.3s; }
-        .nav button:hover, .nav button.active { background: #e94560; color: white; }
-        
-        .vista { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .vista.activa { display: block; }
-        
-        h1, h2, h3 { color: #eee; margin-bottom: 20px; }
-        
+        :root {
+            --bg: #f0f4f8;
+            --surface: #ffffff;
+            --primary: #6b9edd;
+            --primary-light: #a8c8f0;
+            --primary-dark: #4a7fc4;
+            --accent: #89b4e8;
+            --text: #2c3e50;
+            --text-light: #7b8fa3;
+            --border: #d6e4f0;
+            --shadow: 0 2px 16px rgba(107,158,221,0.10);
+            --shadow-hover: 0 8px 30px rgba(107,158,221,0.18);
+            --radius: 14px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* Nav */
+        .nav { background: var(--surface); padding: 16px 0; display: flex; justify-content: center; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-logo { font-weight: 700; font-size: 1.15em; color: var(--primary-dark); margin-right: 20px; letter-spacing: -0.5px; }
+        .nav button { background: transparent; color: var(--text-light); border: none; padding: 10px 22px; border-radius: 25px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.25s; font-family: inherit; }
+        .nav button:hover { color: var(--primary-dark); background: rgba(107,158,221,0.08); }
+        .nav button.active { background: var(--primary); color: #fff; }
+
+        .vista { display: none; padding: 30px 20px 60px; max-width: 1100px; margin: 0 auto; }
+        .vista.activa { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Hero */
+        .hero { text-align: center; padding: 50px 20px 40px; }
+        .hero h1 { font-size: 2.2em; font-weight: 700; color: var(--text); letter-spacing: -1px; }
+        .hero h1 span { color: var(--primary); }
+        .hero p { color: var(--text-light); font-size: 1.05em; margin-top: 10px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+
+        /* Info bar */
+        .info-bar { display: flex; justify-content: center; gap: 40px; margin-bottom: 40px; }
+        .info-item { display: flex; align-items: center; gap: 8px; color: var(--text-light); font-size: 0.88em; }
+        .info-item .icon { width: 36px; height: 36px; background: rgba(107,158,221,0.12); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1em; }
+
+        .section-title { font-size: 1.1em; font-weight: 600; color: var(--text); margin-bottom: 20px; padding-left: 4px; }
+
         /* Menú grid */
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-        .plato-card { background: #16213e; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #0f3460; transition: transform 0.2s, border-color 0.2s; }
-        .plato-card:hover { transform: translateY(-5px); border-color: #e94560; }
-        .plato-card h4 { color: #fff; margin: 0 0 8px 0; }
-        .plato-card p { color: #aaa; margin: 5px 0; font-size: 0.9em; }
-        .precio { color: #e94560; font-weight: bold; font-size: 1.3em; }
-        .plato-card button { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; margin-top: 10px; }
-        .plato-card button:hover { background: #ff6b6b; }
-        
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+        .plato-card { background: var(--surface); border-radius: var(--radius); padding: 24px; text-align: left; border: 1px solid var(--border); transition: all 0.25s; cursor: default; }
+        .plato-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--primary-light); }
+        .plato-card .emoji { font-size: 2em; margin-bottom: 12px; display: block; }
+        .plato-card h4 { color: var(--text); font-weight: 600; font-size: 1em; margin-bottom: 4px; }
+        .plato-card .desc { color: var(--text-light); font-size: 0.85em; line-height: 1.4; margin-bottom: 14px; }
+        .plato-card .card-footer { display: flex; justify-content: space-between; align-items: center; }
+        .precio { color: var(--primary-dark); font-weight: 700; font-size: 1.2em; }
+        .plato-card button { background: var(--primary); color: #fff; border: none; padding: 8px 18px; border-radius: 20px; font-size: 0.85em; font-weight: 500; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+        .plato-card button:hover { background: var(--primary-dark); }
+
         /* Carrito */
-        .carrito-box { background: #16213e; border-radius: 12px; padding: 25px; margin-top: 30px; }
-        .input-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .input-row input, .input-row select { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #0f3460; background: #1a1a2e; color: #fff; font-size: 1em; }
-        #lista-carrito { list-style: none; padding: 0; margin: 15px 0; }
-        #lista-carrito li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #0f3460; color: #ccc; }
-        .total-box { font-size: 1.3em; color: #e94560; text-align: right; margin: 15px 0; }
-        .btn-pedir { width: 100%; background: linear-gradient(135deg, #e94560, #ff6b6b); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; cursor: pointer; }
-        .btn-pedir:hover { opacity: 0.9; }
-        
+        .carrito-box { background: var(--surface); border-radius: var(--radius); padding: 28px; margin-top: 35px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .input-row { display: flex; gap: 12px; margin-bottom: 18px; }
+        .input-row input, .input-row select { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.92em; font-family: inherit; outline: none; transition: border 0.2s; }
+        .input-row input:focus, .input-row select:focus { border-color: var(--primary); }
+        .input-row input::placeholder { color: var(--text-light); }
+
+        #lista-carrito { list-style: none; padding: 0; margin: 0; }
+        #lista-carrito li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); color: var(--text); font-size: 0.92em; }
+        #lista-carrito li span { color: var(--primary-dark); font-weight: 600; }
+        .carrito-empty { color: var(--text-light); text-align: center; padding: 20px; font-size: 0.9em; }
+        .total-box { font-size: 1.15em; color: var(--text); text-align: right; margin: 18px 0 5px; }
+        .total-box span { color: var(--primary-dark); font-weight: 700; font-size: 1.2em; }
+
+        .btn-pedir { width: 100%; background: var(--primary); color: #fff; border: none; padding: 15px; border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; margin-top: 12px; }
+        .btn-pedir:hover { background: var(--primary-dark); box-shadow: 0 4px 15px rgba(107,158,221,0.3); }
+        .btn-pedir:active { transform: scale(0.98); }
+
         /* Panel trabajador */
-        .pedidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .pedido-card { background: #16213e; border-radius: 12px; padding: 20px; border-left: 4px solid #e94560; }
-        .pedido-card .header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .pedido-card .id { color: #e94560; font-weight: bold; }
-        .pedido-card .mesa { background: #e94560; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; }
-        .pedido-card .cliente { color: #fff; font-size: 1.1em; margin-bottom: 10px; }
-        .pedido-card .articulos { color: #aaa; font-size: 0.9em; border-top: 1px solid #0f3460; padding-top: 10px; }
-        .pedido-card .articulos li { padding: 3px 0; list-style: none; }
-        .pedido-card .total { color: #e94560; font-weight: bold; margin-top: 10px; text-align: right; }
-        .pedido-card .estado { display: inline-block; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; margin-top: 10px; }
-        .estado.EN_PREPARACION { background: #f39c12; color: #fff; }
-        .estado.LISTO { background: #27ae60; color: #fff; }
-        
-        .btn-refresh { background: #0f3460; color: #e94560; border: 2px solid #e94560; padding: 10px 25px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
-        .btn-refresh:hover { background: #e94560; color: white; }
-        
-        .empty-msg { color: #666; text-align: center; padding: 40px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .panel-header h1 { margin: 0; }
+        .stats-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 24px; flex: 1; text-align: center; }
+        .stat-card .num { font-size: 1.8em; font-weight: 700; color: var(--primary-dark); }
+        .stat-card .label { font-size: 0.8em; color: var(--text-light); margin-top: 4px; }
+
+        .pedidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+        .pedido-card { background: var(--surface); border-radius: var(--radius); padding: 22px; border: 1px solid var(--border); border-left: 4px solid var(--primary); transition: box-shadow 0.2s; }
+        .pedido-card:hover { box-shadow: var(--shadow-hover); }
+        .pedido-card .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .pedido-card .id { color: var(--primary-dark); font-weight: 700; font-size: 0.95em; }
+        .pedido-card .mesa { background: var(--primary); color: white; padding: 4px 14px; border-radius: 15px; font-size: 0.82em; font-weight: 500; }
+        .pedido-card .cliente { color: var(--text); font-size: 1em; font-weight: 500; margin-bottom: 10px; }
+        .pedido-card .articulos { border-top: 1px solid var(--border); padding-top: 10px; }
+        .pedido-card .articulos li { padding: 4px 0; list-style: none; color: var(--text-light); font-size: 0.88em; }
+        .pedido-card .total-line { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .pedido-card .total { color: var(--primary-dark); font-weight: 700; font-size: 1.05em; }
+        .pedido-card .estado { display: inline-block; padding: 4px 12px; border-radius: 15px; font-size: 0.78em; font-weight: 500; }
+        .estado.EN_PREPARACION { background: #fef3cd; color: #856404; }
+        .estado.LISTO { background: #d4edda; color: #155724; }
+
+        .btn-refresh { background: var(--surface); color: var(--primary-dark); border: 1px solid var(--border); padding: 10px 22px; border-radius: 10px; cursor: pointer; font-size: 0.9em; font-weight: 500; transition: all 0.2s; font-family: inherit; }
+        .btn-refresh:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        .empty-msg { color: var(--text-light); text-align: center; padding: 50px 20px; font-size: 0.95em; }
+
+        /* Footer */
+        .footer { text-align: center; padding: 30px; color: var(--text-light); font-size: 0.82em; border-top: 1px solid var(--border); margin-top: 50px; }
+        .footer a { color: var(--primary-dark); text-decoration: none; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: var(--surface); border: 1px solid var(--primary-light); border-left: 4px solid var(--primary); padding: 16px 24px; border-radius: 10px; box-shadow: var(--shadow-hover); z-index: 999; animation: slideUp 0.3s ease, fadeOut 0.3s ease 2.5s forwards; font-size: 0.92em; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
     </style>
 </head>
 <body>
-    <!-- Navegación -->
+    <!-- Nav -->
     <nav class="nav">
-        <button onclick="cambiarVista('cliente')" class="active" id="btn-cliente">🍽️ Cliente</button>
-        <button onclick="cambiarVista('trabajador')" id="btn-trabajador">👨‍🍳 Panel Trabajador</button>
+        <span class="nav-logo">La Brisa</span>
+        <button onclick="cambiarVista('cliente')" class="active" id="btn-cliente">Carta</button>
+        <button onclick="cambiarVista('trabajador')" id="btn-trabajador">Cocina</button>
     </nav>
 
     <!-- Vista Cliente -->
     <div id="vista-cliente" class="vista activa">
-        <h1>🍽️ Restaurante Spring</h1>
-        <h3>Menú Disponible</h3>
+        <div class="hero">
+            <h1>Bienvenido a <span>La Brisa</span></h1>
+            <p>Cocina mediterránea con ingredientes frescos de temporada. Elige tus platos favoritos y te los preparamos al momento.</p>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-item">
+                <div class="icon">🕐</div>
+                <span>12:00 – 23:00</span>
+            </div>
+            <div class="info-item">
+                <div class="icon">📍</div>
+                <span>Calle del Mar, 42</span>
+            </div>
+            <div class="info-item">
+                <div class="icon">⭐</div>
+                <span>4.8 / 5</span>
+            </div>
+        </div>
+
+        <p class="section-title">Nuestra carta</p>
         <div id="menu" class="menu-grid"></div>
 
         <div class="carrito-box">
-            <h3>🛒 Tu Pedido</h3>
+            <p class="section-title" style="margin-bottom:14px;">Tu pedido</p>
             <div class="input-row">
-                <input type="text" id="cliente" placeholder="Tu nombre...">
+                <input type="text" id="cliente" placeholder="Nombre">
                 <select id="mesa">
-                    <option value="">Selecciona mesa</option>
+                    <option value="">Mesa</option>
                     <option value="1">Mesa 1</option>
                     <option value="2">Mesa 2</option>
                     <option value="3">Mesa 3</option>
@@ -84,18 +163,47 @@
                     <option value="6">Mesa 6</option>
                 </select>
             </div>
-            <ul id="lista-carrito"></ul>
-            <div class="total-box">Total estimado: <span id="total">0.00</span>€</div>
-            <button onclick="enviarPedido()" class="btn-pedir">✓ Confirmar Pedido</button>
+            <ul id="lista-carrito">
+                <li class="carrito-empty">Añade platos desde la carta</li>
+            </ul>
+            <div class="total-box">Total: <span id="total">0.00</span> €</div>
+            <button onclick="enviarPedido()" class="btn-pedir">Confirmar pedido</button>
+        </div>
+
+        <div class="footer">
+            La Brisa Restaurante — Cocina mediterránea desde 2024 · <a href="#">Aviso legal</a>
         </div>
     </div>
 
     <!-- Vista Trabajador -->
     <div id="vista-trabajador" class="vista">
-        <h1>👨‍🍳 Panel de Pedidos</h1>
-        <button onclick="cargarPedidos()" class="btn-refresh">🔄 Actualizar Pedidos</button>
+        <div class="panel-header">
+            <h1>Panel de cocina</h1>
+            <button onclick="cargarPedidos()" class="btn-refresh">Actualizar</button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="num" id="stat-total">0</div>
+                <div class="label">Pedidos totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="num" id="stat-prep">0</div>
+                <div class="label">En preparación</div>
+            </div>
+            <div class="stat-card">
+                <div class="num" id="stat-mesas">0</div>
+                <div class="label">Mesas activas</div>
+            </div>
+        </div>
+
+        <p class="section-title">Pedidos recibidos</p>
         <div id="lista-pedidos" class="pedidos-grid">
-            <p class="empty-msg">Cargando pedidos...</p>
+            <p class="empty-msg">Cargando pedidos…</p>
+        </div>
+
+        <div class="footer">
+            Panel interno — Solo personal autorizado
         </div>
     </div>
 
