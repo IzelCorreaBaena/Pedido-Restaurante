@@ -1,5 +1,5 @@
 let carrito = [];
-let pedidoActual = null; // Guarda el pedido confirmado para poder finalizarlo
+let pedidoActual = null;
 const API = 'http://localhost:8080/api';
 
 // Emojis para cada plato
@@ -9,7 +9,7 @@ const EMOJIS = { 'Hamburguesa Deluxe': '🍔', 'Papas Fritas': '🍟', 'Refresco
 
 document.addEventListener('DOMContentLoaded', () => {
     // Detectamos en qué vista estamos para cargar lo necesario
-    if(document.getElementById('vista-cliente').classList.contains('activa')) {
+    if (document.getElementById('vista-cliente').classList.contains('activa')) {
         cargarMenu();
         cargarMesas();
     } else if (document.getElementById('vista-trabajador').classList.contains('activa')) {
@@ -23,7 +23,7 @@ function cargarMenu() {
         .then(res => res.json())
         .then(platos => {
             const contenedor = document.getElementById('menu');
-            if(contenedor) {
+            if (contenedor) {
                 contenedor.innerHTML = '';
                 platos.forEach(plato => {
                     const emoji = EMOJIS[plato.nombre] || '🍽️';
@@ -48,7 +48,7 @@ function cargarMesas() {
         .then(res => res.json())
         .then(data => {
             const select = document.getElementById('mesa');
-            if(select) {
+            if (select) {
                 select.innerHTML = '<option value="">Mesa</option>';
                 for (let i = 1; i <= data.numMesas; i++) {
                     select.innerHTML += `<option value="${i}">Mesa ${i}</option>`;
@@ -64,10 +64,10 @@ function cambiarVista(vista) {
     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
 
     const vistaElem = document.getElementById(`vista-${vista}`);
-    if(vistaElem) vistaElem.classList.add('activa');
-    
+    if (vistaElem) vistaElem.classList.add('activa');
+
     const btnElem = document.getElementById(`btn-${vista}`);
-    if(btnElem) btnElem.classList.add('active');
+    if (btnElem) btnElem.classList.add('active');
 
     if (vista === 'trabajador') {
         cargarPedidos();
@@ -94,8 +94,8 @@ function agregar(nombre, precio) {
 
 function actualizarCarrito() {
     const lista = document.getElementById('lista-carrito');
-    if(!lista) return;
-    
+    if (!lista) return;
+
     lista.innerHTML = '';
     let total = 0;
 
@@ -113,7 +113,7 @@ function actualizarCarrito() {
     }
 
     const totalElem = document.getElementById('total');
-    if(totalElem) totalElem.textContent = total.toFixed(2);
+    if (totalElem) totalElem.textContent = total.toFixed(2);
 }
 
 function quitar(index) {
@@ -125,10 +125,10 @@ function quitar(index) {
 
 function enviarPedido() {
     const mesaElem = document.getElementById('mesa');
-    if(!mesaElem) return;
-    
+    if (!mesaElem) return;
+
     const mesa = mesaElem.value;
-    
+
     // Generamos nombre automático si no hay input de cliente
     const clienteInput = document.getElementById('cliente');
     let nombre = clienteInput ? clienteInput.value.trim() : `Mesa ${mesa}`;
@@ -144,16 +144,16 @@ function enviarPedido() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombreCliente: nombre, mesa: parseInt(mesa), articulos: carrito })
     })
-    .then(res => res.json())
-    .then(pedido => {
-        pedidoActual = pedido;
-        carrito = [];
-        if(clienteInput) clienteInput.value = '';
-        mesaElem.value = '';
+        .then(res => res.json())
+        .then(pedido => {
+            pedidoActual = pedido;
+            carrito = [];
+            if (clienteInput) clienteInput.value = '';
+            mesaElem.value = '';
 
-        // Mostrar confirmación con botón de finalizar
-        const lista = document.getElementById('lista-carrito');
-        lista.innerHTML = `
+            // Mostrar confirmación con botón de finalizar
+            const lista = document.getElementById('lista-carrito');
+            lista.innerHTML = `
             <li class="confirmacion-pedido" style="flex-direction:column;align-items:center;text-align:center;padding:28px 10px;border:none;">
                 <span style="font-size:2.2em;margin-bottom:10px;">✓</span>
                 <strong style="font-size:1.05em;color:var(--text);">Pedido confirmado</strong>
@@ -174,9 +174,9 @@ function enviarPedido() {
                     </a>
                 </div>
             </li>`;
-        document.getElementById('total').textContent = '0.00';
-    })
-    .catch(() => mostrarToast('Error conectando con el servidor'));
+            document.getElementById('total').textContent = '0.00';
+        })
+        .catch(() => mostrarToast('Error conectando con el servidor'));
 }
 
 function resetCarrito() {
@@ -207,22 +207,22 @@ function confirmarPago(metodo) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ metodoPago: metodo })
     })
-    .then(res => res.json())
-    .then(data => {
-        cerrarModalPago();
+        .then(res => res.json())
+        .then(data => {
+            cerrarModalPago();
 
-        // Bloquear pantalla
-        const lockDetails = document.getElementById('lock-details');
-        const metodoTexto = metodo === 'tarjeta' ? '💳 Tarjeta' : '💶 Efectivo';
-        lockDetails.innerHTML = `
+            // Bloquear pantalla
+            const lockDetails = document.getElementById('lock-details');
+            const metodoTexto = metodo === 'tarjeta' ? '💳 Tarjeta' : '💶 Efectivo';
+            lockDetails.innerHTML = `
             Pedido <strong>#${pedidoActual.id}</strong> · Mesa <strong>${pedidoActual.mesa}</strong><br>
             Total: <strong>${pedidoActual.total.toFixed(2)} €</strong> · Pago: <strong>${metodoTexto}</strong>
         `;
-        document.getElementById('lock-screen').classList.add('activo');
+            document.getElementById('lock-screen').classList.add('activo');
 
-        pedidoActual = null;
-    })
-    .catch(() => mostrarToast('Error al solicitar la cuenta'));
+            pedidoActual = null;
+        })
+        .catch(() => mostrarToast('Error al solicitar la cuenta'));
 }
 
 function desbloquearPantalla() {
@@ -237,21 +237,21 @@ function cargarPedidos() {
         .then(res => res.json())
         .then(pedidos => {
             const contenedor = document.getElementById('lista-pedidos');
-            if(!contenedor) return;
+            if (!contenedor) return;
 
             // Estadísticas
             const statTotal = document.getElementById('stat-total');
-            if(statTotal) statTotal.textContent = pedidos.length;
-            
+            if (statTotal) statTotal.textContent = pedidos.length;
+
             const statPrep = document.getElementById('stat-prep');
-            if(statPrep) statPrep.textContent = pedidos.filter(p => p.estado === 'EN_PREPARACION').length;
-            
+            if (statPrep) statPrep.textContent = pedidos.filter(p => p.estado === 'EN_PREPARACION').length;
+
             const mesasActivas = new Set(pedidos.map(p => p.mesa));
             const statMesas = document.getElementById('stat-mesas');
-            if(statMesas) statMesas.textContent = mesasActivas.size;
-            
+            if (statMesas) statMesas.textContent = mesasActivas.size;
+
             const statCuentas = document.getElementById('stat-cuentas');
-            if(statCuentas) statCuentas.textContent = pedidos.filter(p => p.estado === 'CUENTA_PEDIDA').length;
+            if (statCuentas) statCuentas.textContent = pedidos.filter(p => p.estado === 'CUENTA_PEDIDA').length;
 
             if (pedidos.length === 0) {
                 contenedor.innerHTML = '<p class="empty-msg">No hay pedidos aún. Los pedidos aparecerán aquí en tiempo real.</p>';
@@ -262,7 +262,7 @@ function cargarPedidos() {
             contenedor.innerHTML = pedidos.map(p => {
                 const estadoTexto = p.estado.replace(/_/g, ' ');
                 const pagoInfo = p.metodoPago ? ` · ${p.metodoPago === 'tarjeta' ? '💳' : '💶'} ${p.metodoPago}` : '';
-                
+
                 return `
                 <div class="pedido-card" style="border-left-color:${colorEstado(p.estado)}">
                     <div class="header">
@@ -292,7 +292,7 @@ function cargarPedidos() {
         })
         .catch(() => {
             const contenedor = document.getElementById('lista-pedidos');
-            if(contenedor) contenedor.innerHTML = '<p class="empty-msg">Error al cargar pedidos</p>';
+            if (contenedor) contenedor.innerHTML = '<p class="empty-msg">Error al cargar pedidos</p>';
         });
 }
 
@@ -300,7 +300,7 @@ function cargarPedidos() {
 function avanzarEstado(id) {
     fetch(`${API}/pedido/${id}/avanzar`, { method: 'POST' })
         .then(res => {
-            if(res.ok) cargarPedidos(); 
+            if (res.ok) cargarPedidos();
         });
 }
 
@@ -321,10 +321,10 @@ function cambiarEstadoPedido(id, nuevoEstado) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: nuevoEstado })
     })
-    .then(() => {
-        cargarPedidos();
-        mostrarToast('Estado actualizado');
-    });
+        .then(() => {
+            cargarPedidos();
+            mostrarToast('Estado actualizado');
+        });
 }
 
 function eliminarPedido(id) {
@@ -345,7 +345,7 @@ function cargarNotificaciones() {
         .then(res => res.json())
         .then(notifs => {
             const contenedor = document.getElementById('notificaciones-pago');
-            if(!contenedor) return;
+            if (!contenedor) return;
 
             if (notifs.length === 0) {
                 contenedor.innerHTML = '';
@@ -390,7 +390,7 @@ function cargarAdminMenu() {
         .then(res => res.json())
         .then(articulos => {
             const tbody = document.getElementById('admin-menu-body');
-            if(!tbody) return;
+            if (!tbody) return;
 
             if (articulos.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-light);">No hay artículos</td></tr>';
@@ -415,7 +415,7 @@ function agregarArticuloAdmin() {
     const nombreElem = document.getElementById('art-nombre');
     const descElem = document.getElementById('art-desc');
     const precioElem = document.getElementById('art-precio');
-    
+
     const nombre = nombreElem.value.trim();
     const desc = descElem.value.trim();
     const precio = parseFloat(precioElem.value);
@@ -430,14 +430,14 @@ function agregarArticuloAdmin() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, cantidad: 1, descripcion: desc || 'Sin descripción', precio })
     })
-    .then(res => res.json())
-    .then(() => {
-        nombreElem.value = '';
-        descElem.value = '';
-        precioElem.value = '';
-        cargarAdminMenu();
-        mostrarToast('Artículo añadido al menú');
-    });
+        .then(res => res.json())
+        .then(() => {
+            nombreElem.value = '';
+            descElem.value = '';
+            precioElem.value = '';
+            cargarAdminMenu();
+            mostrarToast('Artículo añadido al menú');
+        });
 }
 
 function editarArticuloAdmin(index, nombre, desc, precio) {
@@ -448,11 +448,11 @@ function editarArticuloAdmin(index, nombre, desc, precio) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: datos.nombre, cantidad: 1, descripcion: datos.descripcion || 'Sin descripción', precio: datos.precio })
         })
-        .then(res => res.json())
-        .then(() => {
-            cargarAdminMenu();
-            mostrarToast('Artículo actualizado');
-        });
+            .then(res => res.json())
+            .then(() => {
+                cargarAdminMenu();
+                mostrarToast('Artículo actualizado');
+            });
     });
 }
 
@@ -473,14 +473,14 @@ function cargarAdminPedidos() {
         .then(pedidos => {
             const tbody = document.getElementById('admin-pedidos-body');
             const emptyMsg = document.getElementById('admin-pedidos-empty');
-            if(!tbody) return;
+            if (!tbody) return;
 
             if (pedidos.length === 0) {
                 tbody.innerHTML = '';
-                if(emptyMsg) emptyMsg.style.display = 'block';
+                if (emptyMsg) emptyMsg.style.display = 'block';
                 return;
             }
-            if(emptyMsg) emptyMsg.style.display = 'none';
+            if (emptyMsg) emptyMsg.style.display = 'none';
 
             tbody.innerHTML = pedidos.map(p => {
                 const estadoTexto = p.estado.replace(/_/g, ' ');
@@ -510,10 +510,10 @@ function adminCambiarEstado(id) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ estado: nuevoEstado })
         })
-        .then(() => {
-            cargarAdminPedidos();
-            mostrarToast('Estado actualizado');
-        });
+            .then(() => {
+                cargarAdminPedidos();
+                mostrarToast('Estado actualizado');
+            });
     });
 }
 
@@ -533,7 +533,7 @@ function cargarAdminMesas() {
         .then(res => res.json())
         .then(data => {
             const inputMesas = document.getElementById('admin-num-mesas');
-            if(inputMesas) inputMesas.value = data.numMesas;
+            if (inputMesas) inputMesas.value = data.numMesas;
         });
 }
 
@@ -549,10 +549,10 @@ function guardarMesas() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numMesas })
     })
-    .then(res => res.json())
-    .then(() => {
-        mostrarToast(`Mesas actualizadas a ${numMesas}`);
-    });
+        .then(res => res.json())
+        .then(() => {
+            mostrarToast(`Mesas actualizadas a ${numMesas}`);
+        });
 }
 
 // ========== MODALES PERSONALIZADOS ==========

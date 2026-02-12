@@ -1,0 +1,1200 @@
+/* Variables globales de tema */
+:root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --primary: #6b9edd;
+    --primary-light: #a8c8f0;
+    --primary-dark: #4a7fc4;
+    --accent: #89b4e8;
+    --text: #2c3e50;
+    --text-light: #7b8fa3;
+    --border: #d6e4f0;
+    --shadow: 0 2px 16px rgba(107, 158, 221, 0.10);
+    --shadow-hover: 0 8px 30px rgba(107, 158, 221, 0.18);
+    --radius: 14px;
+    --danger: #e74c3c;
+    --danger-light: #fdecea;
+    --success: #27ae60;
+    --success-light: #d4edda;
+    --warning: #f39c12;
+    --warning-light: #fef3cd;
+}
+
+/* Reset general */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+/* Barra de navegacion */
+.nav {
+    background: var(--surface);
+    padding: 16px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+}
+
+.nav-logo {
+    font-weight: 700;
+    font-size: 1.15em;
+    color: var(--primary-dark);
+    margin-right: 20px;
+    letter-spacing: -0.5px;
+}
+
+.nav button {
+    background: transparent;
+    color: var(--text-light);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+}
+
+.nav button:hover {
+    color: var(--primary-dark);
+    background: rgba(107, 158, 221, 0.08);
+}
+
+.nav button.active {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* Contenedor de vistas */
+.vista {
+    display: none;
+    padding: 30px 20px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.vista.activa {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Animacion de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Seccion hero / bienvenida */
+.hero {
+    text-align: center;
+    padding: 50px 20px 40px;
+}
+
+.hero h1 {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -1px;
+}
+
+.hero h1 span {
+    color: var(--primary);
+}
+
+.hero p {
+    color: var(--text-light);
+    font-size: 1.05em;
+    margin-top: 10px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+/* Barra de info (horario, ubicacion, rating) */
+.info-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-light);
+    font-size: 0.88em;
+}
+
+.info-item .icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(107, 158, 221, 0.12);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+}
+
+/* Titulo de seccion */
+.section-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 20px;
+    padding-left: 4px;
+}
+
+/* Grid del menu de platos */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+/* Tarjeta de plato */
+.plato-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: left;
+    border: 1px solid var(--border);
+    transition: all 0.25s;
+    cursor: default;
+}
+
+.plato-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-light);
+}
+
+.plato-card .emoji {
+    font-size: 2em;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.plato-card h4 {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 1em;
+    margin-bottom: 4px;
+}
+
+.plato-card .desc {
+    color: var(--text-light);
+    font-size: 0.85em;
+    line-height: 1.4;
+    margin-bottom: 14px;
+}
+
+.plato-card .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.precio {
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 1.2em;
+}
+
+.plato-card button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+}
+
+.plato-card button:hover {
+    background: var(--primary-dark);
+}
+
+/* Caja del carrito */
+.carrito-box {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-top: 35px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+/* Fila de inputs (nombre, mesa) */
+.input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.input-row input,
+.input-row select {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.92em;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.input-row input:focus,
+.input-row select:focus {
+    border-color: var(--primary);
+}
+
+.input-row input::placeholder {
+    color: var(--text-light);
+}
+
+/* Lista de articulos en el carrito */
+#lista-carrito {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#lista-carrito li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.92em;
+}
+
+#lista-carrito li span {
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.carrito-empty {
+    color: var(--text-light);
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9em;
+}
+
+/* Total del pedido */
+.total-box {
+    font-size: 1.15em;
+    color: var(--text);
+    text-align: right;
+    margin: 18px 0 5px;
+}
+
+.total-box span {
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 1.2em;
+}
+
+/* Boton confirmar pedido */
+.btn-pedir {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    margin-top: 12px;
+}
+
+.btn-pedir:hover {
+    background: var(--primary-dark);
+    box-shadow: 0 4px 15px rgba(107, 158, 221, 0.3);
+}
+
+.btn-pedir:active {
+    transform: scale(0.98);
+}
+
+/* Boton finalizar (pedir cuenta) */
+.btn-finalizar {
+    width: 100%;
+    background: var(--success);
+    color: #fff;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    margin-top: 8px;
+}
+
+.btn-finalizar:hover {
+    background: #219653;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+/* Cabecera del panel trabajador */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.panel-header h1 {
+    margin: 0;
+}
+
+/* Fila de estadisticas */
+.stats-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 24px;
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
+}
+
+.stat-card .num {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.stat-card .label {
+    font-size: 0.8em;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+/* Grid de tarjetas de pedidos */
+.pedidos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+}
+
+/* Tarjeta de pedido */
+.pedido-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 22px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    transition: box-shadow 0.2s;
+}
+
+.pedido-card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.pedido-card .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.pedido-card .id {
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.95em;
+}
+
+.pedido-card .mesa {
+    background: var(--primary);
+    color: white;
+    padding: 4px 14px;
+    border-radius: 15px;
+    font-size: 0.82em;
+    font-weight: 500;
+}
+
+.pedido-card .cliente {
+    color: var(--text);
+    font-size: 1em;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.pedido-card .articulos {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
+
+.pedido-card .articulos li {
+    padding: 4px 0;
+    list-style: none;
+    color: var(--text-light);
+    font-size: 0.88em;
+}
+
+.pedido-card .total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.pedido-card .total {
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 1.05em;
+}
+
+/* Badge de estado del pedido */
+.pedido-card .estado {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.78em;
+    font-weight: 500;
+}
+
+/* Colores segun estado */
+.estado.EN_PREPARACION {
+    background: #fef3cd;
+    color: #856404;
+}
+
+.estado.LISTO_PARA_ENTREGAR {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.estado.ENTREGADO {
+    background: #d4edda;
+    color: #155724;
+}
+
+.estado.CUENTA_PEDIDA {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.estado.PAGADO {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Botones de acciones en tarjeta de pedido */
+.pedido-card .acciones {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.pedido-card .acciones button {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.78em;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.pedido-card .acciones button:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.pedido-card .acciones button.btn-danger {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.pedido-card .acciones button.btn-danger:hover {
+    background: var(--danger);
+    color: #fff;
+}
+
+/* Boton refrescar */
+.btn-refresh {
+    background: var(--surface);
+    color: var(--primary-dark);
+    border: 1px solid var(--border);
+    padding: 10px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.btn-refresh:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+/* Mensaje vacio */
+.empty-msg {
+    color: var(--text-light);
+    text-align: center;
+    padding: 50px 20px;
+    font-size: 0.95em;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-light);
+    font-size: 0.82em;
+    border-top: 1px solid var(--border);
+    margin-top: 50px;
+}
+
+.footer a {
+    color: var(--primary-dark);
+    text-decoration: none;
+}
+
+/* Toast de notificacion */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--surface);
+    border: 1px solid var(--primary-light);
+    border-left: 4px solid var(--primary);
+    padding: 16px 24px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-hover);
+    z-index: 999;
+    animation: slideUp 0.3s ease, fadeOut 0.3s ease 2.5s forwards;
+    font-size: 0.92em;
+    max-width: 350px;
+}
+
+/* Animacion toast entrada */
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Animacion toast salida */
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+/* Banner de notificacion de pago (trabajador) */
+.notif-banner {
+    background: var(--warning-light);
+    border: 1px solid var(--warning);
+    border-left: 4px solid var(--warning);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
+.notif-banner .notif-text {
+    font-size: 0.92em;
+    font-weight: 500;
+    color: #856404;
+}
+
+.notif-banner .notif-text strong {
+    font-weight: 700;
+}
+
+.notif-banner button {
+    background: var(--warning);
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 0.82em;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.notif-banner button:hover {
+    opacity: 0.85;
+}
+
+/* Overlay para modales */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 500;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.activo {
+    display: flex;
+}
+
+/* Modal de pago */
+.modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 36px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal h2 {
+    font-size: 1.3em;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.modal p {
+    color: var(--text-light);
+    font-size: 0.92em;
+    margin-bottom: 24px;
+}
+
+.modal .total-pago {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 24px;
+}
+
+.modal .opciones-pago {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+}
+
+.modal .opciones-pago button {
+    flex: 1;
+    padding: 18px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+}
+
+.modal .opciones-pago button:hover {
+    border-color: var(--primary);
+    background: rgba(107, 158, 221, 0.05);
+}
+
+.modal .opciones-pago button .icono {
+    font-size: 2em;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.modal .opciones-pago button .label {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.95em;
+}
+
+.modal .btn-cancelar {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    margin-top: 18px;
+    cursor: pointer;
+    font-size: 0.88em;
+    font-family: inherit;
+}
+
+.modal .btn-cancelar:hover {
+    color: var(--text);
+}
+
+/* Pantalla bloqueada tras pedir cuenta */
+.lock-screen {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #e8f0fe 0%, #f0f4f8 100%);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.lock-screen.activo {
+    display: flex;
+}
+
+.lock-screen .lock-icon {
+    font-size: 4em;
+    margin-bottom: 24px;
+    animation: pulse 2s infinite;
+}
+
+/* Animacion pulso del icono */
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.lock-screen h1 {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+}
+
+.lock-screen p {
+    font-size: 1.1em;
+    color: var(--text-light);
+    max-width: 400px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.lock-screen .lock-details {
+    margin-top: 20px;
+    background: var(--surface);
+    padding: 16px 28px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 0.92em;
+    color: var(--text-light);
+}
+
+.lock-screen .btn-desbloquear {
+    margin-top: 30px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.lock-screen .btn-desbloquear:hover {
+    opacity: 1;
+}
+
+/* ===== PANEL DE ADMINISTRACION ===== */
+
+/* Seccion admin contenedora */
+.admin-section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 28px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+}
+
+.admin-section h2 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-section h2 .icon-h {
+    font-size: 1.15em;
+}
+
+/* Tabla admin */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88em;
+}
+
+.admin-table th {
+    color: var(--text-light);
+    font-weight: 500;
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-table td {
+    color: var(--text);
+}
+
+.admin-table tr:hover td {
+    background: rgba(107, 158, 221, 0.04);
+}
+
+/* Botones de acciones en tabla */
+.admin-table .actions {
+    display: flex;
+    gap: 6px;
+}
+
+.admin-table .actions button {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.8em;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.admin-table .actions button:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.admin-table .actions button.del:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+/* Formulario admin para agregar articulos */
+.admin-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.admin-form .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-form label {
+    font-size: 0.78em;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.admin-form input {
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.88em;
+    font-family: inherit;
+    outline: none;
+}
+
+.admin-form input:focus {
+    border-color: var(--primary);
+}
+
+.admin-form button {
+    padding: 9px 20px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-size: 0.88em;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.admin-form button:hover {
+    background: var(--primary-dark);
+}
+
+/* Configuracion de mesas */
+.mesas-config {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.mesas-config input {
+    width: 80px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 1.1em;
+    font-weight: 600;
+    text-align: center;
+    font-family: inherit;
+}
+
+.mesas-config button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+/* Modal generico (confirm/prompt) */
+.modal-generic {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.25s ease;
+}
+
+.modal-generic .modal-icon {
+    font-size: 2.5em;
+    margin-bottom: 14px;
+}
+
+.modal-generic h3 {
+    font-size: 1.15em;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+
+.modal-generic p {
+    color: var(--text-light);
+    font-size: 0.92em;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Botones del modal generico */
+.modal-generic .modal-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-generic .modal-btns button {
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    border: none;
+    transition: all 0.2s;
+}
+
+.modal-generic .btn-confirm {
+    background: var(--primary);
+    color: #fff;
+}
+
+.modal-generic .btn-confirm:hover {
+    background: var(--primary-dark);
+}
+
+.modal-generic .btn-confirm-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.modal-generic .btn-confirm-danger:hover {
+    background: #c0392b;
+}
+
+.modal-generic .btn-cancel {
+    background: var(--bg);
+    color: var(--text-light);
+    border: 1px solid var(--border) !important;
+}
+
+.modal-generic .btn-cancel:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+/* Input dentro del modal */
+.modal-generic .modal-input {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.92em;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border 0.2s;
+}
+
+.modal-generic .modal-input:focus {
+    border-color: var(--primary);
+}
+
+/* Fila de formulario dentro del modal */
+.modal-generic .modal-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    margin-bottom: 12px;
+}
+
+.modal-generic .modal-form-row label {
+    font-size: 0.8em;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.modal-generic .modal-form-row input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.9em;
+    font-family: inherit;
+    outline: none;
+}
+
+.modal-generic .modal-form-row input:focus {
+    border-color: var(--primary);
+}
+
+/* Grid de opciones de estado en modal */
+.modal-estado-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.modal-estado-grid button {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9em;
+    font-weight: 500;
+    text-align: left;
+    transition: all 0.2s;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-estado-grid button:hover {
+    border-color: var(--primary);
+    background: rgba(107, 158, 221, 0.06);
+}
+
+.modal-estado-grid button .estado-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
