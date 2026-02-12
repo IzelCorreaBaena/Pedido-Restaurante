@@ -8,8 +8,14 @@ const EMOJIS = { 'Hamburguesa Deluxe': '🍔', 'Papas Fritas': '🍟', 'Refresco
 // ========== INICIALIZACIÓN ==========
 
 document.addEventListener('DOMContentLoaded', () => {
-    cargarMenu();
-    cargarMesas();
+    // Detectamos en qué vista estamos para cargar lo necesario
+    if(document.getElementById('vista-cliente').classList.contains('activa')) {
+        cargarMenu();
+        cargarMesas();
+    } else if (document.getElementById('vista-trabajador').classList.contains('activa')) {
+        cargarPedidos();
+        cargarNotificaciones();
+    }
 });
 
 function cargarMenu() {
@@ -17,21 +23,23 @@ function cargarMenu() {
         .then(res => res.json())
         .then(platos => {
             const contenedor = document.getElementById('menu');
-            contenedor.innerHTML = '';
-            platos.forEach(plato => {
-                const emoji = EMOJIS[plato.nombre] || '🍽️';
-                contenedor.innerHTML += `
-                    <div class="plato-card">
-                        <span class="emoji">${emoji}</span>
-                        <h4>${plato.nombre}</h4>
-                        <p class="desc">${plato.descripcion}</p>
-                        <div class="card-footer">
-                            <span class="precio">${plato.precio.toFixed(2)} €</span>
-                            <button onclick="agregar('${plato.nombre.replace(/'/g, "\\'")}', ${plato.precio})">Añadir</button>
+            if(contenedor) {
+                contenedor.innerHTML = '';
+                platos.forEach(plato => {
+                    const emoji = EMOJIS[plato.nombre] || '🍽️';
+                    contenedor.innerHTML += `
+                        <div class="plato-card">
+                            <span class="emoji">${emoji}</span>
+                            <h4>${plato.nombre}</h4>
+                            <p class="desc">${plato.descripcion}</p>
+                            <div class="card-footer">
+                                <span class="precio">${plato.precio.toFixed(2)} €</span>
+                                <button onclick="agregar('${plato.nombre.replace(/'/g, "\\'")}', ${plato.precio})">Añadir</button>
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
         });
 }
 
@@ -40,9 +48,11 @@ function cargarMesas() {
         .then(res => res.json())
         .then(data => {
             const select = document.getElementById('mesa');
-            select.innerHTML = '<option value="">Mesa</option>';
-            for (let i = 1; i <= data.numMesas; i++) {
-                select.innerHTML += `<option value="${i}">Mesa ${i}</option>`;
+            if(select) {
+                select.innerHTML = '<option value="">Mesa</option>';
+                for (let i = 1; i <= data.numMesas; i++) {
+                    select.innerHTML += `<option value="${i}">Mesa ${i}</option>`;
+                }
             }
         });
 }
@@ -53,8 +63,11 @@ function cambiarVista(vista) {
     document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
 
-    document.getElementById(`vista-${vista}`).classList.add('activa');
-    document.getElementById(`btn-${vista}`).classList.add('active');
+    const vistaElem = document.getElementById(`vista-${vista}`);
+    if(vistaElem) vistaElem.classList.add('activa');
+    
+    const btnElem = document.getElementById(`btn-${vista}`);
+    if(btnElem) btnElem.classList.add('active');
 
     if (vista === 'trabajador') {
         cargarPedidos();
@@ -81,6 +94,8 @@ function agregar(nombre, precio) {
 
 function actualizarCarrito() {
     const lista = document.getElementById('lista-carrito');
+    if(!lista) return;
+    
     lista.innerHTML = '';
     let total = 0;
 
@@ -97,7 +112,8 @@ function actualizarCarrito() {
         });
     }
 
-    document.getElementById('total').textContent = total.toFixed(2);
+    const totalElem = document.getElementById('total');
+    if(totalElem) totalElem.textContent = total.toFixed(2);
 }
 
 function quitar(index) {
@@ -108,11 +124,18 @@ function quitar(index) {
 // ========== ENVIAR PEDIDO ==========
 
 function enviarPedido() {
-    const nombre = document.getElementById('cliente').value.trim();
-    const mesa = document.getElementById('mesa').value;
+    const mesaElem = document.getElementById('mesa');
+    if(!mesaElem) return;
+    
+    const mesa = mesaElem.value;
+    
+    // Generamos nombre automático si no hay input de cliente
+    const clienteInput = document.getElementById('cliente');
+    let nombre = clienteInput ? clienteInput.value.trim() : `Mesa ${mesa}`;
+    if (!nombre) nombre = `Mesa ${mesa}`;
 
-    if (!nombre || !mesa || carrito.length === 0) {
-        mostrarToast('Completa nombre, mesa y añade algún plato');
+    if (!mesa || carrito.length === 0) {
+        mostrarToast('Selecciona mesa y añade platos');
         return;
     }
 
@@ -125,8 +148,8 @@ function enviarPedido() {
     .then(pedido => {
         pedidoActual = pedido;
         carrito = [];
-        document.getElementById('cliente').value = '';
-        document.getElementById('mesa').value = '';
+        if(clienteInput) clienteInput.value = '';
+        mesaElem.value = '';
 
         // Mostrar confirmación con botón de finalizar
         const lista = document.getElementById('lista-carrito');
@@ -214,62 +237,50 @@ function cargarPedidos() {
         .then(res => res.json())
         .then(pedidos => {
             const contenedor = document.getElementById('lista-pedidos');
+            if(!contenedor) return;
 
             // Estadísticas
-            document.getElementById('stat-total').textContent = pedidos.length;
-            document.getElementById('stat-prep').textContent = pedidos.filter(p => p.estado === 'EN_PREPARACION').length;
+            const statTotal = document.getElementById('stat-total');
+            if(statTotal) statTotal.textContent = pedidos.length;
+            
+            const statPrep = document.getElementById('stat-prep');
+            if(statPrep) statPrep.textContent = pedidos.filter(p => p.estado === 'EN_PREPARACION').length;
+            
             const mesasActivas = new Set(pedidos.map(p => p.mesa));
-            document.getElementById('stat-mesas').textContent = mesasActivas.size;
-            document.getElementById('stat-cuentas').textContent = pedidos.filter(p => p.estado === 'CUENTA_PEDIDA').length;
+            const statMesas = document.getElementById('stat-mesas');
+            if(statMesas) statMesas.textContent = mesasActivas.size;
+            
+            const statCuentas = document.getElementById('stat-cuentas');
+            if(statCuentas) statCuentas.textContent = pedidos.filter(p => p.estado === 'CUENTA_PEDIDA').length;
 
             if (pedidos.length === 0) {
                 contenedor.innerHTML = '<p class="empty-msg">No hay pedidos aún. Los pedidos aparecerán aquí en tiempo real.</p>';
                 return;
             }
 
+            // AQUÍ ESTABA EL ERROR DE CONFLICTO. ESTA ES LA VERSIÓN CORREGIDA:
             contenedor.innerHTML = pedidos.map(p => {
                 const estadoTexto = p.estado.replace(/_/g, ' ');
                 const pagoInfo = p.metodoPago ? ` · ${p.metodoPago === 'tarjeta' ? '💳' : '💶'} ${p.metodoPago}` : '';
+                
                 return `
                 <div class="pedido-card" style="border-left-color:${colorEstado(p.estado)}">
                     <div class="header">
                         <span class="id">#${p.id}</span>
                         <span class="mesa">Mesa ${p.mesa}</span>
                     </div>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+                    
                     <div class="cliente">👤 ${p.nombreCliente}${pagoInfo}</div>
->>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
-=======
-                    <div class="cliente">👤 ${p.nombreCliente}${pagoInfo}</div>
->>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
+                    
                     <ul class="articulos">
                         ${p.articulos.map(a => `<li>• ${a.nombre} ×${a.cantidad}</li>`).join('')}
                     </ul>
+                    
                     <div class="total-line">
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        <span class="estado ${p.estado}">${p.estado.replace(/_/g, ' ')}</span>
-                        
-                        ${p.estado !== 'ENTREGADO' ? 
-                            `<button onclick="avanzarEstado(${p.id})" style="padding:5px 10px; font-size:0.8em; background:#eee; border:none; border-radius:5px; cursor:pointer;">
-                                Avanzar ➡
-                            </button>` 
-                            : '<span style="color:green">✔ Completado</span>'}
-=======
-=======
->>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
                         <span class="estado ${p.estado}">${estadoTexto}</span>
                         <span class="total">${p.total.toFixed(2)} €</span>
->>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
                     </div>
-                    <div class="acciones">
-                        ${p.estado === 'EN_PREPARACION' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'LISTO_PARA_ENTREGAR')">Listo</button>` : ''}
-                        ${p.estado === 'LISTO_PARA_ENTREGAR' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'ENTREGADO')">Entregado</button>` : ''}
-                        ${p.estado === 'CUENTA_PEDIDA' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'PAGADO')">Marcar pagado</button>` : ''}
-                        <button class="btn-danger" onclick="eliminarPedido(${p.id})">Eliminar</button>
-                    </div>
+                    
                     <div class="acciones">
                         ${p.estado === 'EN_PREPARACION' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'LISTO_PARA_ENTREGAR')">Listo</button>` : ''}
                         ${p.estado === 'LISTO_PARA_ENTREGAR' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'ENTREGADO')">Entregado</button>` : ''}
@@ -280,7 +291,8 @@ function cargarPedidos() {
             `}).join('');
         })
         .catch(() => {
-            document.getElementById('lista-pedidos').innerHTML = '<p class="empty-msg">Error al cargar pedidos</p>';
+            const contenedor = document.getElementById('lista-pedidos');
+            if(contenedor) contenedor.innerHTML = '<p class="empty-msg">Error al cargar pedidos</p>';
         });
 }
 
@@ -288,11 +300,9 @@ function cargarPedidos() {
 function avanzarEstado(id) {
     fetch(`${API}/pedido/${id}/avanzar`, { method: 'POST' })
         .then(res => {
-            if(res.ok) cargarPedidos(); // Recargar la lista si todo fue bien
+            if(res.ok) cargarPedidos(); 
         });
 }
-
-// Notificación toast
 
 function colorEstado(estado) {
     const colores = {
@@ -333,6 +343,8 @@ function cargarNotificaciones() {
         .then(res => res.json())
         .then(notifs => {
             const contenedor = document.getElementById('notificaciones-pago');
+            if(!contenedor) return;
+
             if (notifs.length === 0) {
                 contenedor.innerHTML = '';
                 return;
@@ -360,9 +372,10 @@ function descartarNotificacion(index) {
         });
 }
 
-// Polling automático de notificaciones cada 5 segundos (si estamos en vista trabajador)
+// Polling automático
 setInterval(() => {
-    if (document.getElementById('vista-trabajador').classList.contains('activa')) {
+    const vistaTrabajador = document.getElementById('vista-trabajador');
+    if (vistaTrabajador && vistaTrabajador.classList.contains('activa')) {
         cargarNotificaciones();
         cargarPedidos();
     }
@@ -375,6 +388,8 @@ function cargarAdminMenu() {
         .then(res => res.json())
         .then(articulos => {
             const tbody = document.getElementById('admin-menu-body');
+            if(!tbody) return;
+
             if (articulos.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-light);">No hay artículos</td></tr>';
                 return;
@@ -395,9 +410,13 @@ function cargarAdminMenu() {
 }
 
 function agregarArticuloAdmin() {
-    const nombre = document.getElementById('art-nombre').value.trim();
-    const desc = document.getElementById('art-desc').value.trim();
-    const precio = parseFloat(document.getElementById('art-precio').value);
+    const nombreElem = document.getElementById('art-nombre');
+    const descElem = document.getElementById('art-desc');
+    const precioElem = document.getElementById('art-precio');
+    
+    const nombre = nombreElem.value.trim();
+    const desc = descElem.value.trim();
+    const precio = parseFloat(precioElem.value);
 
     if (!nombre || !precio || precio <= 0) {
         mostrarToast('Completa nombre y precio correctamente');
@@ -411,9 +430,9 @@ function agregarArticuloAdmin() {
     })
     .then(res => res.json())
     .then(() => {
-        document.getElementById('art-nombre').value = '';
-        document.getElementById('art-desc').value = '';
-        document.getElementById('art-precio').value = '';
+        nombreElem.value = '';
+        descElem.value = '';
+        precioElem.value = '';
         cargarAdminMenu();
         mostrarToast('Artículo añadido al menú');
     });
@@ -460,13 +479,14 @@ function cargarAdminPedidos() {
         .then(pedidos => {
             const tbody = document.getElementById('admin-pedidos-body');
             const emptyMsg = document.getElementById('admin-pedidos-empty');
+            if(!tbody) return;
 
             if (pedidos.length === 0) {
                 tbody.innerHTML = '';
-                emptyMsg.style.display = 'block';
+                if(emptyMsg) emptyMsg.style.display = 'block';
                 return;
             }
-            emptyMsg.style.display = 'none';
+            if(emptyMsg) emptyMsg.style.display = 'none';
 
             tbody.innerHTML = pedidos.map(p => {
                 const estadoTexto = p.estado.replace(/_/g, ' ');
@@ -522,7 +542,8 @@ function cargarAdminMesas() {
     fetch(`${API}/mesas`)
         .then(res => res.json())
         .then(data => {
-            document.getElementById('admin-num-mesas').value = data.numMesas;
+            const inputMesas = document.getElementById('admin-num-mesas');
+            if(inputMesas) inputMesas.value = data.numMesas;
         });
 }
 
@@ -545,7 +566,6 @@ function guardarMesas() {
 }
 
 // ========== UTILIDADES ==========
-
 
 function mostrarToast(msg) {
     const existing = document.querySelector('.toast');
