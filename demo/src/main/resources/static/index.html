@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Restaurante Java Spring</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        
+        /* Grid del menú */
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .plato-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fff; transition: transform 0.2s; }
+        .plato-card:hover { transform: translateY(-5px); border-color: #667eea; }
+        .precio { color: #28a745; font-weight: bold; font-size: 1.2em; }
+        button { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+
+        /* Carrito */
+        .carrito-section { border-top: 2px solid #eee; padding-top: 20px; }
+        #lista-carrito { list-style: none; padding: 0; }
+        #lista-carrito li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; }
+        
+        .total-box { font-size: 1.2em; font-weight: bold; text-align: right; margin-top: 10px; }
+        .btn-pedir { width: 100%; background: #28a745; padding: 15px; font-size: 1.1em; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ Restaurante Spring</h1>
+        
+        <h3>Menú Disponible</h3>
+        <div id="menu" class="menu-grid">
+            </div>
+
+        <div class="carrito-section">
+            <h3>🛒 Tu Pedido</h3>
+            <input type="text" id="cliente" placeholder="Tu nombre..." style="width: 100%; padding: 10px; margin-bottom: 10px;">
+            <ul id="lista-carrito"></ul>
+            <div class="total-box">Total estimado: <span id="total">0.00</span>€</div>
+            <button onclick="enviarPedido()" class="btn-pedir">Confirmar Pedido</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
