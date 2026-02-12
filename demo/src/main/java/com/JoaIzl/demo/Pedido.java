@@ -16,6 +16,7 @@ public class Pedido {
     private double subtotal;
     private double igic;
     private double total;
+    private String metodoPago; // "efectivo" o "tarjeta"
 
     public Pedido(String nombreCliente, int mesa) {
         this.id = (int) (Math.random() * 100000);
@@ -79,5 +80,30 @@ public class Pedido {
 
     public double getTotal() {
         return total;
+    }
+
+    public String getMetodoPago() {
+        return metodoPago;
+    }
+
+    public void setEstado(EstadoPedido estado) {
+        this.estado = estado;
+    }
+
+    public void setMetodoPago(String metodoPago) {
+        this.metodoPago = metodoPago;
+    }
+
+    public void setMesa(int mesa) {
+        this.mesa = mesa;
+    }
+
+    public void setNombreCliente(String nombreCliente) {
+        this.nombreCliente = nombreCliente;
+    }
+
+    public void setArticulos(List<Articulo> articulos) {
+        this.articulos = articulos;
+        recalcularTotales();
     }
 }

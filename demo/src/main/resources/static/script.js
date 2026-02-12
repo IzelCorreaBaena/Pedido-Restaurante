@@ -1,15 +1,23 @@
 let carrito = [];
+let pedidoActual = null; // Guarda el pedido confirmado para poder finalizarlo
 const API = 'http://localhost:8080/api';
 
 // Emojis para cada plato
 const EMOJIS = { 'Hamburguesa Deluxe': '🍔', 'Papas Fritas': '🍟', 'Refresco': '🥤', 'Pizza Margarita': '🍕' };
 
-// Cargar menú al iniciar
+// ========== INICIALIZACIÓN ==========
+
 document.addEventListener('DOMContentLoaded', () => {
+    cargarMenu();
+    cargarMesas();
+});
+
+function cargarMenu() {
     fetch(`${API}/menu`)
         .then(res => res.json())
         .then(platos => {
             const contenedor = document.getElementById('menu');
+            contenedor.innerHTML = '';
             platos.forEach(plato => {
                 const emoji = EMOJIS[plato.nombre] || '🍽️';
                 contenedor.innerHTML += `
@@ -19,15 +27,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="desc">${plato.descripcion}</p>
                         <div class="card-footer">
                             <span class="precio">${plato.precio.toFixed(2)} €</span>
-                            <button onclick="agregar('${plato.nombre}', ${plato.precio})">Añadir</button>
+                            <button onclick="agregar('${plato.nombre.replace(/'/g, "\\'")}', ${plato.precio})">Añadir</button>
                         </div>
                     </div>
                 `;
             });
         });
-});
+}
 
-// Cambiar entre vista cliente y trabajador
+function cargarMesas() {
+    fetch(`${API}/mesas`)
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('mesa');
+            select.innerHTML = '<option value="">Mesa</option>';
+            for (let i = 1; i <= data.numMesas; i++) {
+                select.innerHTML += `<option value="${i}">Mesa ${i}</option>`;
+            }
+        });
+}
+
+// ========== NAVEGACIÓN ==========
+
 function cambiarVista(vista) {
     document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
@@ -35,10 +56,23 @@ function cambiarVista(vista) {
     document.getElementById(`vista-${vista}`).classList.add('activa');
     document.getElementById(`btn-${vista}`).classList.add('active');
 
-    if (vista === 'trabajador') cargarPedidos();
+    if (vista === 'trabajador') {
+        cargarPedidos();
+        cargarNotificaciones();
+    }
+    if (vista === 'admin') {
+        cargarAdminMenu();
+        cargarAdminPedidos();
+        cargarAdminMesas();
+    }
+    if (vista === 'cliente') {
+        cargarMenu();
+        cargarMesas();
+    }
 }
 
-// Agregar artículo al carrito
+// ========== CARRITO (CLIENTE) ==========
+
 function agregar(nombre, precio) {
     carrito.push({ nombre, precio, cantidad: 1, descripcion: "Pedido web" });
     actualizarCarrito();
@@ -66,13 +100,13 @@ function actualizarCarrito() {
     document.getElementById('total').textContent = total.toFixed(2);
 }
 
-// Quitar artículo del carrito
 function quitar(index) {
     carrito.splice(index, 1);
     actualizarCarrito();
 }
 
-// Enviar pedido al servidor
+// ========== ENVIAR PEDIDO ==========
+
 function enviarPedido() {
     const nombre = document.getElementById('cliente').value.trim();
     const mesa = document.getElementById('mesa').value;
@@ -89,11 +123,12 @@ function enviarPedido() {
     })
     .then(res => res.json())
     .then(pedido => {
+        pedidoActual = pedido;
         carrito = [];
         document.getElementById('cliente').value = '';
         document.getElementById('mesa').value = '';
 
-        // Mostrar confirmación dentro del contenedor del carrito
+        // Mostrar confirmación con botón de finalizar
         const lista = document.getElementById('lista-carrito');
         lista.innerHTML = `
             <li class="confirmacion-pedido" style="flex-direction:column;align-items:center;text-align:center;padding:28px 10px;border:none;">
@@ -105,49 +140,111 @@ function enviarPedido() {
                 <span style="color:var(--text-light);font-size:0.82em;margin-top:4px;">
                     Tu pedido se está preparando
                 </span>
-                <a href="#" onclick="resetCarrito(); return false;"
-                   style="margin-top:14px;color:var(--primary-dark);font-size:0.88em;text-decoration:none;font-weight:500;">
-                    Hacer otro pedido
-                </a>
+                <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center;">
+                    <a href="#" onclick="abrirModalPago(); return false;"
+                       style="background:var(--success);color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:500;font-size:0.9em;">
+                        Finalizar y pagar
+                    </a>
+                    <a href="#" onclick="resetCarrito(); return false;"
+                       style="color:var(--primary-dark);font-size:0.88em;text-decoration:none;font-weight:500;padding:10px 12px;">
+                        Hacer otro pedido
+                    </a>
+                </div>
             </li>`;
         document.getElementById('total').textContent = '0.00';
     })
     .catch(() => mostrarToast('Error conectando con el servidor'));
 }
 
-// Restaurar carrito tras confirmación
 function resetCarrito() {
+    pedidoActual = null;
     actualizarCarrito();
 }
 
-// Cargar pedidos para el panel del trabajador
+// ========== FINALIZAR PEDIDO / PAGO ==========
+
+function abrirModalPago() {
+    if (!pedidoActual) {
+        mostrarToast('No hay pedido activo');
+        return;
+    }
+    document.getElementById('modal-total').textContent = pedidoActual.total.toFixed(2) + ' €';
+    document.getElementById('modal-pago').classList.add('activo');
+}
+
+function cerrarModalPago() {
+    document.getElementById('modal-pago').classList.remove('activo');
+}
+
+function confirmarPago(metodo) {
+    if (!pedidoActual) return;
+
+    fetch(`${API}/pedido/${pedidoActual.id}/pagar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ metodoPago: metodo })
+    })
+    .then(res => res.json())
+    .then(data => {
+        cerrarModalPago();
+
+        // Bloquear pantalla
+        const lockDetails = document.getElementById('lock-details');
+        const metodoTexto = metodo === 'tarjeta' ? '💳 Tarjeta' : '💶 Efectivo';
+        lockDetails.innerHTML = `
+            Pedido <strong>#${pedidoActual.id}</strong> · Mesa <strong>${pedidoActual.mesa}</strong><br>
+            Total: <strong>${pedidoActual.total.toFixed(2)} €</strong> · Pago: <strong>${metodoTexto}</strong>
+        `;
+        document.getElementById('lock-screen').classList.add('activo');
+
+        pedidoActual = null;
+    })
+    .catch(() => mostrarToast('Error al solicitar la cuenta'));
+}
+
+function desbloquearPantalla() {
+    document.getElementById('lock-screen').classList.remove('activo');
+    resetCarrito();
+}
+
+// ========== PANEL TRABAJADOR ==========
+
 function cargarPedidos() {
     fetch(`${API}/pedidos`)
         .then(res => res.json())
         .then(pedidos => {
             const contenedor = document.getElementById('lista-pedidos');
 
-            // Actualizar estadísticas
+            // Estadísticas
             document.getElementById('stat-total').textContent = pedidos.length;
             document.getElementById('stat-prep').textContent = pedidos.filter(p => p.estado === 'EN_PREPARACION').length;
             const mesasActivas = new Set(pedidos.map(p => p.mesa));
             document.getElementById('stat-mesas').textContent = mesasActivas.size;
+            document.getElementById('stat-cuentas').textContent = pedidos.filter(p => p.estado === 'CUENTA_PEDIDA').length;
 
             if (pedidos.length === 0) {
                 contenedor.innerHTML = '<p class="empty-msg">No hay pedidos aún. Los pedidos aparecerán aquí en tiempo real.</p>';
                 return;
             }
 
-            contenedor.innerHTML = pedidos.map(p => `
-                <div class="pedido-card">
+            contenedor.innerHTML = pedidos.map(p => {
+                const estadoTexto = p.estado.replace(/_/g, ' ');
+                const pagoInfo = p.metodoPago ? ` · ${p.metodoPago === 'tarjeta' ? '💳' : '💶'} ${p.metodoPago}` : '';
+                return `
+                <div class="pedido-card" style="border-left-color:${colorEstado(p.estado)}">
                     <div class="header">
                         <span class="id">#${p.id}</span>
                         <span class="mesa">Mesa ${p.mesa}</span>
                     </div>
+<<<<<<< HEAD
+=======
+                    <div class="cliente">👤 ${p.nombreCliente}${pagoInfo}</div>
+>>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
                     <ul class="articulos">
                         ${p.articulos.map(a => `<li>• ${a.nombre} ×${a.cantidad}</li>`).join('')}
                     </ul>
                     <div class="total-line">
+<<<<<<< HEAD
                         <span class="estado ${p.estado}">${p.estado.replace(/_/g, ' ')}</span>
                         
                         ${p.estado !== 'ENTREGADO' ? 
@@ -155,9 +252,19 @@ function cargarPedidos() {
                                 Avanzar ➡
                             </button>` 
                             : '<span style="color:green">✔ Completado</span>'}
+=======
+                        <span class="estado ${p.estado}">${estadoTexto}</span>
+                        <span class="total">${p.total.toFixed(2)} €</span>
+>>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
+                    </div>
+                    <div class="acciones">
+                        ${p.estado === 'EN_PREPARACION' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'LISTO_PARA_ENTREGAR')">Listo</button>` : ''}
+                        ${p.estado === 'LISTO_PARA_ENTREGAR' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'ENTREGADO')">Entregado</button>` : ''}
+                        ${p.estado === 'CUENTA_PEDIDA' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'PAGADO')">Marcar pagado</button>` : ''}
+                        <button class="btn-danger" onclick="eliminarPedido(${p.id})">Eliminar</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         })
         .catch(() => {
             document.getElementById('lista-pedidos').innerHTML = '<p class="empty-msg">Error al cargar pedidos</p>';
