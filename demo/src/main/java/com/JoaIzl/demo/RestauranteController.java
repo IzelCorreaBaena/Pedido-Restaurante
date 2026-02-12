@@ -174,6 +174,103 @@ public class RestauranteController {
         return Map.of("ok", true, "numMesas", numMesas);
     }
 
+    // PUT /api/pedido/{id}/estado - Cambiar estado de un pedido
+    @PutMapping("/pedido/{id}/estado")
+    public Pedido cambiarEstado(@PathVariable int id, @RequestBody Map<String, String> body) {
+        for (Pedido p : pedidos) {
+            if (p.getId() == id) {
+                p.setEstado(EstadoPedido.valueOf(body.get("estado")));
+                return p;
+            }
+        }
+        return null;
+    }
+
+    // POST /api/pedido/{id}/pagar - Cliente pide la cuenta
+    @PostMapping("/pedido/{id}/pagar")
+    public Map<String, Object> pedirCuenta(@PathVariable int id, @RequestBody Map<String, String> body) {
+        String metodoPago = body.get("metodoPago");
+        for (Pedido p : pedidos) {
+            if (p.getId() == id) {
+                p.setEstado(EstadoPedido.CUENTA_PEDIDA);
+                p.setMetodoPago(metodoPago);
+
+                // Crear notificación para el trabajador
+                Map<String, Object> notif = Map.of(
+                        "pedidoId", p.getId(),
+                        "mesa", p.getMesa(),
+                        "cliente", p.getNombreCliente(),
+                        "total", p.getTotal(),
+                        "metodoPago", metodoPago,
+                        "timestamp", System.currentTimeMillis()
+                );
+                notificaciones.add(notif);
+
+                return Map.of("ok", true, "mensaje", "Cuenta solicitada");
+            }
+        }
+        return Map.of("ok", false, "mensaje", "Pedido no encontrado");
+    }
+
+    // DELETE /api/pedido/{id}
+    @DeleteMapping("/pedido/{id}")
+    public Map<String, Object> eliminarPedido(@PathVariable int id) {
+        boolean removed = pedidos.removeIf(p -> p.getId() == id);
+        return Map.of("ok", removed);
+    }
+
+    // ========== NOTIFICACIONES ==========
+    // GET /api/notificaciones - Obtener notificaciones de pago para trabajadores
+    @GetMapping("/notificaciones")
+    public List<Map<String, Object>> obtenerNotificaciones() {
+        return notificaciones;
+    }
+
+    // DELETE /api/notificacion/{index} - Descartar una notificación
+    @DeleteMapping("/notificacion/{index}")
+    public Map<String, Object> descartarNotificacion(@PathVariable int index) {
+        if (index >= 0 && index < notificaciones.size()) {
+            notificaciones.remove(index);
+            return Map.of("ok", true);
+        }
+        return Map.of("ok", false);
+    }
+
+    // ========== ADMIN ==========
+    // POST /api/admin/articulo - Añadir artículo al menú
+    @PostMapping("/admin/articulo")
+    public Articulo agregarArticulo(@RequestBody Articulo articulo) {
+        menuArticulos.add(articulo);
+        return articulo;
+    }
+
+    // PUT /api/admin/articulo/{index} - Editar artículo del menú
+    @PutMapping("/admin/articulo/{index}")
+    public Articulo editarArticulo(@PathVariable int index, @RequestBody Articulo articulo) {
+        if (index >= 0 && index < menuArticulos.size()) {
+            menuArticulos.set(index, articulo);
+            return articulo;
+        }
+        return null;
+    }
+
+    // DELETE /api/admin/articulo/{index} - Eliminar artículo del menú
+    @DeleteMapping("/admin/articulo/{index}")
+    public Map<String, Object> eliminarArticulo(@PathVariable int index) {
+        if (index >= 0 && index < menuArticulos.size()) {
+            menuArticulos.remove(index);
+            return Map.of("ok", true);
+        }
+        return Map.of("ok", false);
+    }
+
+    // PUT /api/admin/mesas - Cambiar número de mesas
+    @PutMapping("/admin/mesas")
+    public Map<String, Object> cambiarMesas(@RequestBody Map<String, Integer> body) {
+        this.numMesas = body.get("numMesas");
+        return Map.of("ok", true, "numMesas", numMesas);
+    }
+
     // Record auxiliar
     public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {
 

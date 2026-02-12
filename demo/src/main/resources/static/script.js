@@ -237,6 +237,10 @@ function cargarPedidos() {
                         <span class="mesa">Mesa ${p.mesa}</span>
                     </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+                    <div class="cliente">👤 ${p.nombreCliente}${pagoInfo}</div>
+>>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
 =======
                     <div class="cliente">👤 ${p.nombreCliente}${pagoInfo}</div>
 >>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
@@ -244,6 +248,7 @@ function cargarPedidos() {
                         ${p.articulos.map(a => `<li>• ${a.nombre} ×${a.cantidad}</li>`).join('')}
                     </ul>
                     <div class="total-line">
+<<<<<<< HEAD
 <<<<<<< HEAD
                         <span class="estado ${p.estado}">${p.estado.replace(/_/g, ' ')}</span>
                         
@@ -253,9 +258,17 @@ function cargarPedidos() {
                             </button>` 
                             : '<span style="color:green">✔ Completado</span>'}
 =======
+=======
+>>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
                         <span class="estado ${p.estado}">${estadoTexto}</span>
                         <span class="total">${p.total.toFixed(2)} €</span>
 >>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
+                    </div>
+                    <div class="acciones">
+                        ${p.estado === 'EN_PREPARACION' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'LISTO_PARA_ENTREGAR')">Listo</button>` : ''}
+                        ${p.estado === 'LISTO_PARA_ENTREGAR' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'ENTREGADO')">Entregado</button>` : ''}
+                        ${p.estado === 'CUENTA_PEDIDA' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'PAGADO')">Marcar pagado</button>` : ''}
+                        <button class="btn-danger" onclick="eliminarPedido(${p.id})">Eliminar</button>
                     </div>
                     <div class="acciones">
                         ${p.estado === 'EN_PREPARACION' ? `<button onclick="cambiarEstadoPedido(${p.id}, 'LISTO_PARA_ENTREGAR')">Listo</button>` : ''}
@@ -271,6 +284,7 @@ function cargarPedidos() {
         });
 }
 
+<<<<<<< HEAD
 function avanzarEstado(id) {
     fetch(`${API}/pedido/${id}/avanzar`, { method: 'POST' })
         .then(res => {
@@ -279,6 +293,260 @@ function avanzarEstado(id) {
 }
 
 // Notificación toast
+=======
+function colorEstado(estado) {
+    const colores = {
+        'EN_PREPARACION': '#f39c12',
+        'LISTO_PARA_ENTREGAR': '#3498db',
+        'ENTREGADO': '#27ae60',
+        'CUENTA_PEDIDA': '#e74c3c',
+        'PAGADO': '#17a2b8'
+    };
+    return colores[estado] || '#6b9edd';
+}
+
+function cambiarEstadoPedido(id, nuevoEstado) {
+    fetch(`${API}/pedido/${id}/estado`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: nuevoEstado })
+    })
+    .then(() => {
+        cargarPedidos();
+        mostrarToast('Estado actualizado');
+    });
+}
+
+function eliminarPedido(id) {
+    if (!confirm('¿Eliminar este pedido?')) return;
+    fetch(`${API}/pedido/${id}`, { method: 'DELETE' })
+        .then(() => {
+            cargarPedidos();
+            mostrarToast('Pedido eliminado');
+        });
+}
+
+// ========== NOTIFICACIONES DE PAGO (TRABAJADOR) ==========
+
+function cargarNotificaciones() {
+    fetch(`${API}/notificaciones`)
+        .then(res => res.json())
+        .then(notifs => {
+            const contenedor = document.getElementById('notificaciones-pago');
+            if (notifs.length === 0) {
+                contenedor.innerHTML = '';
+                return;
+            }
+            contenedor.innerHTML = notifs.map((n, i) => {
+                const metodoIcon = n.metodoPago === 'tarjeta' ? '💳' : '💶';
+                return `
+                <div class="notif-banner">
+                    <span class="notif-text">
+                        ${metodoIcon} <strong>Mesa ${n.mesa}</strong> (${n.cliente}) ha pedido la cuenta de
+                        <strong>${n.total.toFixed(2)} €</strong> en <strong>${n.metodoPago}</strong>
+                    </span>
+                    <button onclick="descartarNotificacion(${i})">Atendido ✓</button>
+                </div>
+            `}).join('');
+        });
+}
+
+function descartarNotificacion(index) {
+    fetch(`${API}/notificacion/${index}`, { method: 'DELETE' })
+        .then(() => {
+            cargarNotificaciones();
+            cargarPedidos();
+            mostrarToast('Notificación descartada');
+        });
+}
+
+// Polling automático de notificaciones cada 5 segundos (si estamos en vista trabajador)
+setInterval(() => {
+    if (document.getElementById('vista-trabajador').classList.contains('activa')) {
+        cargarNotificaciones();
+        cargarPedidos();
+    }
+}, 5000);
+
+// ========== PANEL ADMIN ==========
+
+function cargarAdminMenu() {
+    fetch(`${API}/menu`)
+        .then(res => res.json())
+        .then(articulos => {
+            const tbody = document.getElementById('admin-menu-body');
+            if (articulos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-light);">No hay artículos</td></tr>';
+                return;
+            }
+            tbody.innerHTML = articulos.map((a, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${a.nombre}</td>
+                    <td>${a.descripcion}</td>
+                    <td><strong>${a.precio.toFixed(2)} €</strong></td>
+                    <td class="actions">
+                        <button onclick="editarArticuloAdmin(${i}, '${a.nombre.replace(/'/g, "\\'")}', '${a.descripcion.replace(/'/g, "\\'")}', ${a.precio})">Editar</button>
+                        <button class="del" onclick="eliminarArticuloAdmin(${i})">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        });
+}
+
+function agregarArticuloAdmin() {
+    const nombre = document.getElementById('art-nombre').value.trim();
+    const desc = document.getElementById('art-desc').value.trim();
+    const precio = parseFloat(document.getElementById('art-precio').value);
+
+    if (!nombre || !precio || precio <= 0) {
+        mostrarToast('Completa nombre y precio correctamente');
+        return;
+    }
+
+    fetch(`${API}/admin/articulo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, cantidad: 1, descripcion: desc || 'Sin descripción', precio })
+    })
+    .then(res => res.json())
+    .then(() => {
+        document.getElementById('art-nombre').value = '';
+        document.getElementById('art-desc').value = '';
+        document.getElementById('art-precio').value = '';
+        cargarAdminMenu();
+        mostrarToast('Artículo añadido al menú');
+    });
+}
+
+function editarArticuloAdmin(index, nombre, desc, precio) {
+    const nuevoNombre = prompt('Nombre:', nombre);
+    if (nuevoNombre === null) return;
+    const nuevaDesc = prompt('Descripción:', desc);
+    if (nuevaDesc === null) return;
+    const nuevoPrecio = prompt('Precio (€):', precio);
+    if (nuevoPrecio === null) return;
+
+    const precioNum = parseFloat(nuevoPrecio);
+    if (!nuevoNombre || isNaN(precioNum) || precioNum <= 0) {
+        mostrarToast('Datos inválidos');
+        return;
+    }
+
+    fetch(`${API}/admin/articulo/${index}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nuevoNombre, cantidad: 1, descripcion: nuevaDesc || 'Sin descripción', precio: precioNum })
+    })
+    .then(res => res.json())
+    .then(() => {
+        cargarAdminMenu();
+        mostrarToast('Artículo actualizado');
+    });
+}
+
+function eliminarArticuloAdmin(index) {
+    if (!confirm('¿Eliminar este artículo del menú?')) return;
+    fetch(`${API}/admin/articulo/${index}`, { method: 'DELETE' })
+        .then(() => {
+            cargarAdminMenu();
+            mostrarToast('Artículo eliminado');
+        });
+}
+
+function cargarAdminPedidos() {
+    fetch(`${API}/pedidos`)
+        .then(res => res.json())
+        .then(pedidos => {
+            const tbody = document.getElementById('admin-pedidos-body');
+            const emptyMsg = document.getElementById('admin-pedidos-empty');
+
+            if (pedidos.length === 0) {
+                tbody.innerHTML = '';
+                emptyMsg.style.display = 'block';
+                return;
+            }
+            emptyMsg.style.display = 'none';
+
+            tbody.innerHTML = pedidos.map(p => {
+                const estadoTexto = p.estado.replace(/_/g, ' ');
+                const pagoInfo = p.metodoPago || '—';
+                return `
+                <tr>
+                    <td>#${p.id}</td>
+                    <td>${p.nombreCliente}</td>
+                    <td>Mesa ${p.mesa}</td>
+                    <td><span class="estado ${p.estado}" style="font-size:0.78em;">${estadoTexto}</span></td>
+                    <td><strong>${p.total.toFixed(2)} €</strong></td>
+                    <td>${pagoInfo}</td>
+                    <td class="actions">
+                        <button onclick="adminCambiarEstado(${p.id})">Estado</button>
+                        <button class="del" onclick="adminEliminarPedido(${p.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `}).join('');
+        });
+}
+
+function adminCambiarEstado(id) {
+    const estado = prompt('Nuevo estado:\n1) EN_PREPARACION\n2) LISTO_PARA_ENTREGAR\n3) ENTREGADO\n4) CUENTA_PEDIDA\n5) PAGADO');
+    const estados = { '1': 'EN_PREPARACION', '2': 'LISTO_PARA_ENTREGAR', '3': 'ENTREGADO', '4': 'CUENTA_PEDIDA', '5': 'PAGADO' };
+    const nuevoEstado = estados[estado] || estado;
+
+    if (!nuevoEstado || !Object.values(estados).includes(nuevoEstado)) {
+        mostrarToast('Estado no válido');
+        return;
+    }
+
+    fetch(`${API}/pedido/${id}/estado`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: nuevoEstado })
+    })
+    .then(() => {
+        cargarAdminPedidos();
+        mostrarToast('Estado actualizado');
+    });
+}
+
+function adminEliminarPedido(id) {
+    if (!confirm('¿Eliminar este pedido?')) return;
+    fetch(`${API}/pedido/${id}`, { method: 'DELETE' })
+        .then(() => {
+            cargarAdminPedidos();
+            mostrarToast('Pedido eliminado');
+        });
+}
+
+function cargarAdminMesas() {
+    fetch(`${API}/mesas`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('admin-num-mesas').value = data.numMesas;
+        });
+}
+
+function guardarMesas() {
+    const numMesas = parseInt(document.getElementById('admin-num-mesas').value);
+    if (isNaN(numMesas) || numMesas < 1) {
+        mostrarToast('Número de mesas inválido');
+        return;
+    }
+
+    fetch(`${API}/admin/mesas`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numMesas })
+    })
+    .then(res => res.json())
+    .then(() => {
+        mostrarToast(`Mesas actualizadas a ${numMesas}`);
+    });
+}
+
+// ========== UTILIDADES ==========
+
+>>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
 function mostrarToast(msg) {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
