@@ -1,6 +1,6 @@
 let carrito = [];
 let pedidoActual = null;
-const API = 'http://localhost:8080/api';
+const API = '/api';
 
 // Emojis para cada plato
 const EMOJIS = { 'Hamburguesa Deluxe': '🍔', 'Papas Fritas': '🍟', 'Refresco': '🥤', 'Pizza Margarita': '🍕' };
@@ -77,6 +77,7 @@ function cambiarVista(vista) {
         cargarAdminMenu();
         cargarAdminPedidos();
         cargarAdminMesas();
+        cargarHistorial();
     }
     if (vista === 'cliente') {
         cargarMenu();
@@ -512,6 +513,7 @@ function adminCambiarEstado(id) {
         })
             .then(() => {
                 cargarAdminPedidos();
+                cargarHistorial();
                 mostrarToast('Estado actualizado');
             });
     });
@@ -641,6 +643,77 @@ function mostrarModalEstado() {
             });
         });
         document.getElementById('estado-cancelar').addEventListener('click', () => { limpiar(); resolve(null); });
+    });
+}
+
+// ========== HISTORIAL DEL DÍA (ADMIN) ==========
+
+function cargarHistorial() {
+    fetch(`${API}/admin/historial/hoy`)
+        .then(res => res.json())
+        .then(data => {
+            const ventas = document.getElementById('hist-ventas');
+            if (ventas) ventas.textContent = Number(data.totalVentas).toFixed(2) + ' €';
+
+            const pedidosElem = document.getElementById('hist-pedidos');
+            if (pedidosElem) pedidosElem.textContent = data.totalPedidos;
+
+            const tarjeta = document.getElementById('hist-tarjeta');
+            if (tarjeta) tarjeta.textContent = data.pagosTarjeta;
+
+            const efectivo = document.getElementById('hist-efectivo');
+            if (efectivo) efectivo.textContent = data.pagosEfectivo;
+
+            const tbody = document.getElementById('historial-body');
+            const emptyMsg = document.getElementById('historial-empty');
+            const table = document.getElementById('historial-table');
+            if (!tbody) return;
+
+            if (data.pedidos.length === 0) {
+                tbody.innerHTML = '';
+                if (table) table.style.display = 'none';
+                if (emptyMsg) emptyMsg.style.display = 'block';
+                return;
+            }
+
+            if (table) table.style.display = '';
+            if (emptyMsg) emptyMsg.style.display = 'none';
+
+            tbody.innerHTML = data.pedidos.map(p => {
+                const hora = p.fechaCreacion ? p.fechaCreacion.substring(11, 16) : '—';
+                const articulos = p.articulos.map(a => `${a.nombre} ×${a.cantidad}`).join(', ');
+                const pagoIcon = p.metodoPago === 'tarjeta' ? '💳' : '💶';
+                return `
+                    <tr>
+                        <td>#${p.id}</td>
+                        <td>${p.nombreCliente}</td>
+                        <td>Mesa ${p.mesa}</td>
+                        <td style="font-size:0.82em;color:var(--text-light);">${articulos}</td>
+                        <td><strong>${p.total.toFixed(2)} €</strong></td>
+                        <td>${pagoIcon} ${p.metodoPago}</td>
+                        <td>${hora}</td>
+                    </tr>
+                `;
+            }).join('');
+        })
+        .catch(() => {
+            const emptyMsg = document.getElementById('historial-empty');
+            if (emptyMsg) {
+                emptyMsg.textContent = 'Error al cargar historial';
+                emptyMsg.style.display = 'block';
+            }
+        });
+}
+
+function limpiarHistorial() {
+    mostrarConfirm('¿Limpiar historial?', 'Se eliminarán todos los registros del historial.', 'Limpiar').then(ok => {
+        if (!ok) return;
+        fetch(`${API}/admin/historial`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(() => {
+                cargarHistorial();
+                mostrarToast('Historial limpiado');
+            });
     });
 }
 

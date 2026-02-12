@@ -5,20 +5,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.File;
-import java.io.IOException;
+import java.time.LocalDate;
 import org.springframework.web.bind.annotation.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
-public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS NADA!
+public class RestauranteController {
 
     private List<Pedido> pedidos = new ArrayList<>();
-    
+    private List<Pedido> historialPedidos = new ArrayList<>();
+
     // Lista del menú 
     private List<Articulo> menuArticulos = new ArrayList<>(List.of(
             new Articulo("Hamburguesa Deluxe", 1, "Con queso y bacon", 5.50),
@@ -32,11 +31,13 @@ public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS N
 
     // Configuración de persistencia
     private final String RUTA_ARCHIVO = "pedidos.json";
+    private final String RUTA_HISTORIAL = "historial.json";
     private ObjectMapper mapper = new ObjectMapper();
 
     // Constructor
     public RestauranteController() {
-        cargarDatos(); 
+        cargarDatos();
+        cargarHistorial();
     }
 
     // ========== MENÚ ==========
@@ -77,7 +78,7 @@ public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS N
             nuevoPedido.agregarArticulo(art);
         }
         pedidos.add(nuevoPedido);
-        
+
         guardarDatos();
         return nuevoPedido;
     }
@@ -96,18 +97,33 @@ public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS N
 
     @PutMapping("/pedido/{id}/estado")
     public Pedido cambiarEstado(@PathVariable int id, @RequestBody Map<String, String> body) {
+        Pedido encontrado = null;
         for (Pedido p : pedidos) {
             if (p.getId() == id) {
-                try {
-                    p.setEstado(EstadoPedido.valueOf(body.get("estado")));
-                    guardarDatos();
-                    return p;
-                } catch (Exception e) {
-                    return null;
-                }
+                encontrado = p;
+                break;
             }
         }
-        return null;
+        if (encontrado == null) {
+            return null;
+        }
+
+        try {
+            EstadoPedido nuevoEstado = EstadoPedido.valueOf(body.get("estado"));
+            encontrado.setEstado(nuevoEstado);
+
+            // Si se marca como PAGADO, mover al historial
+            if (nuevoEstado == EstadoPedido.PAGADO) {
+                historialPedidos.add(encontrado);
+                pedidos.remove(encontrado);
+                guardarHistorial();
+            }
+
+            guardarDatos();
+            return encontrado;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @PostMapping("/pedido/{id}/pagar")
@@ -117,8 +133,8 @@ public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS N
             if (p.getId() == id) {
                 p.setEstado(EstadoPedido.CUENTA_PEDIDA);
                 p.setMetodoPago(metodoPago);
-                
-                guardarDatos(); 
+
+                guardarDatos();
 
                 Map<String, Object> notif = Map.of(
                         "pedidoId", p.getId(),
@@ -139,7 +155,9 @@ public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS N
     @DeleteMapping("/pedido/{id}")
     public Map<String, Object> eliminarPedido(@PathVariable int id) {
         boolean removed = pedidos.removeIf(p -> p.getId() == id);
-        if(removed) guardarDatos();
+        if (removed) {
+            guardarDatos();
+        }
         return Map.of("ok", removed);
     }
 
@@ -189,15 +207,46 @@ public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS N
         return Map.of("ok", true, "numMesas", numMesas);
     }
 
+    // ========== HISTORIAL DEL DÍA ==========
+    @GetMapping("/admin/historial")
+    public List<Pedido> obtenerHistorial() {
+        return historialPedidos;
+    }
+
+    @GetMapping("/admin/historial/hoy")
+    public Map<String, Object> obtenerResumenDiario() {
+        String hoy = LocalDate.now().toString();
+        List<Pedido> pedidosHoy = historialPedidos.stream()
+                .filter(p -> p.getFechaCreacion() != null && p.getFechaCreacion().startsWith(hoy))
+                .toList();
+
+        double totalVentas = pedidosHoy.stream().mapToDouble(Pedido::getTotal).sum();
+        totalVentas = Math.round(totalVentas * 100.0) / 100.0;
+        long pagosTarjeta = pedidosHoy.stream().filter(p -> "tarjeta".equals(p.getMetodoPago())).count();
+        long pagosEfectivo = pedidosHoy.stream().filter(p -> "efectivo".equals(p.getMetodoPago())).count();
+
+        return Map.of(
+                "totalVentas", totalVentas,
+                "totalPedidos", pedidosHoy.size(),
+                "pagosTarjeta", pagosTarjeta,
+                "pagosEfectivo", pagosEfectivo,
+                "pedidos", pedidosHoy
+        );
+    }
+
+    @DeleteMapping("/admin/historial")
+    public Map<String, Object> limpiarHistorial() {
+        historialPedidos.clear();
+        guardarHistorial();
+        return Map.of("ok", true);
+    }
+
     // ========== MÉTODOS DE PERSISTENCIA (JSON) ==========
-    
     private void guardarDatos() {
         try {
-            // writeValue viene de Jackson (com.fasterxml...)
             mapper.writeValue(new File(RUTA_ARCHIVO), pedidos);
-            System.out.println("💾 Datos guardados en " + RUTA_ARCHIVO);
-        } catch (IOException e) {
-            System.err.println("❌ Error al guardar: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error al guardar pedidos: " + e.getMessage());
         }
     }
 
@@ -205,14 +254,37 @@ public class RestauranteController { // <--- ¡YA NO ES ABSTRACT NI IMPLEMENTS N
         try {
             File archivo = new File(RUTA_ARCHIVO);
             if (archivo.exists()) {
-                // AQUÍ USAMOS TypeReference de forma anónima
-                pedidos = mapper.readValue(archivo, new TypeReference<List<Pedido>>(){});
-                System.out.println("📂 Pedidos cargados: " + pedidos.size());
+                pedidos = mapper.readValue(archivo, new TypeReference<List<Pedido>>() {
+                });
+                System.out.println("Pedidos cargados: " + pedidos.size());
             }
-        } catch (IOException e) {
-            System.err.println("❌ Error al cargar: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error al cargar pedidos: " + e.getMessage());
         }
     }
 
-    public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {}
+    private void guardarHistorial() {
+        try {
+            mapper.writeValue(new File(RUTA_HISTORIAL), historialPedidos);
+        } catch (Exception e) {
+            System.err.println("Error al guardar historial: " + e.getMessage());
+        }
+    }
+
+    private void cargarHistorial() {
+        try {
+            File archivo = new File(RUTA_HISTORIAL);
+            if (archivo.exists()) {
+                historialPedidos = mapper.readValue(archivo, new TypeReference<List<Pedido>>() {
+                });
+                System.out.println("Historial cargado: " + historialPedidos.size());
+            }
+        } catch (Exception e) {
+            System.err.println("Error al cargar historial: " + e.getMessage());
+        }
+    }
+
+    public record DatosPedido(String nombreCliente, int mesa, List<Articulo> articulos) {
+
+    }
 }

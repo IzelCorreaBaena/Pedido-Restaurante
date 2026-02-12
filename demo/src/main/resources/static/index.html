@@ -170,6 +170,47 @@
             <p class="empty-msg" id="admin-pedidos-empty" style="display:none;padding:20px;">No hay pedidos</p>
         </div>
 
+        <!-- Historial del día -->
+        <div class="admin-section">
+            <h2><span class="icon-h">📊</span> Historial del día</h2>
+            <div class="historial-stats">
+                <div class="stat-card">
+                    <div class="num" id="hist-ventas">0.00 €</div>
+                    <div class="label">Ventas del día</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="hist-pedidos">0</div>
+                    <div class="label">Pedidos completados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="hist-tarjeta">0</div>
+                    <div class="label">💳 Tarjeta</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="hist-efectivo">0</div>
+                    <div class="label">💶 Efectivo</div>
+                </div>
+            </div>
+            <table class="admin-table" id="historial-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Mesa</th>
+                        <th>Artículos</th>
+                        <th>Total</th>
+                        <th>Pago</th>
+                        <th>Hora</th>
+                    </tr>
+                </thead>
+                <tbody id="historial-body"></tbody>
+            </table>
+            <p class="empty-msg" id="historial-empty" style="display:none;padding:20px;">No hay pedidos completados hoy</p>
+            <div style="margin-top:16px;text-align:right;">
+                <button onclick="limpiarHistorial()" class="btn-limpiar-historial">Limpiar historial</button>
+            </div>
+        </div>
+
         <div class="footer">
             Panel de administración — Acceso restringido
         </div>
