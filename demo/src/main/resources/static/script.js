@@ -284,7 +284,7 @@ function cargarPedidos() {
         });
 }
 
-<<<<<<< HEAD
+
 function avanzarEstado(id) {
     fetch(`${API}/pedido/${id}/avanzar`, { method: 'POST' })
         .then(res => {
@@ -293,7 +293,7 @@ function avanzarEstado(id) {
 }
 
 // Notificación toast
-=======
+
 function colorEstado(estado) {
     const colores = {
         'EN_PREPARACION': '#f39c12',
@@ -546,7 +546,7 @@ function guardarMesas() {
 
 // ========== UTILIDADES ==========
 
->>>>>>> 1450008f074474d675cf130f9b7147aaf4942397
+
 function mostrarToast(msg) {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
