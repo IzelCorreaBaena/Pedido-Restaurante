@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.File;
 import java.time.LocalDate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.type.TypeReference;
@@ -84,19 +85,19 @@ public class RestauranteController {
     }
 
     @PostMapping("/pedido/{id}/avanzar")
-    public Pedido avanzarEstadoPedido(@PathVariable int id) {
+    public ResponseEntity<Pedido> avanzarEstadoPedido(@PathVariable int id) {
         for (Pedido p : pedidos) {
             if (p.getId() == id) {
                 p.avanzarEstado();
                 guardarDatos();
-                return p;
+                return ResponseEntity.ok(p);
             }
         }
-        return null;
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/pedido/{id}/estado")
-    public Pedido cambiarEstado(@PathVariable int id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Pedido> cambiarEstado(@PathVariable int id, @RequestBody Map<String, String> body) {
         Pedido encontrado = null;
         for (Pedido p : pedidos) {
             if (p.getId() == id) {
@@ -105,7 +106,7 @@ public class RestauranteController {
             }
         }
         if (encontrado == null) {
-            return null;
+            return ResponseEntity.notFound().build();
         }
 
         try {
@@ -120,9 +121,9 @@ public class RestauranteController {
             }
 
             guardarDatos();
-            return encontrado;
+            return ResponseEntity.ok(encontrado);
         } catch (Exception e) {
-            return null;
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -184,12 +185,12 @@ public class RestauranteController {
     }
 
     @PutMapping("/admin/articulo/{index}")
-    public Articulo editarArticulo(@PathVariable int index, @RequestBody Articulo articulo) {
+    public ResponseEntity<Articulo> editarArticulo(@PathVariable int index, @RequestBody Articulo articulo) {
         if (index >= 0 && index < menuArticulos.size()) {
             menuArticulos.set(index, articulo);
-            return articulo;
+            return ResponseEntity.ok(articulo);
         }
-        return null;
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/admin/articulo/{index}")
