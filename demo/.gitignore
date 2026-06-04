@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Datos de persistencia en tiempo de ejecución ###
+pedidos.json
+historial.json

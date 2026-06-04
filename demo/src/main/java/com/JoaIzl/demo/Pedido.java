@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Pedido {
+
+    private static final AtomicInteger CONTADOR = new AtomicInteger(1);
 
     private int id;
     private String nombreCliente;
@@ -24,7 +27,7 @@ public class Pedido {
     }
 
     public Pedido(String nombreCliente, int mesa) {
-        this.id = (int) (Math.random() * 100000);
+        this.id = CONTADOR.getAndIncrement();
         this.nombreCliente = nombreCliente;
         this.mesa = mesa;
         this.articulos = new ArrayList<>();
