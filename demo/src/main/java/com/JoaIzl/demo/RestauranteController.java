@@ -8,6 +8,11 @@ import java.io.File;
 import java.time.LocalDate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.JoaIzl.demo.entity.Articulo;
+import com.JoaIzl.demo.entity.EstadoPedido;
+import com.JoaIzl.demo.entity.Pedido;
+
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.type.TypeReference;
 
